@@ -92,20 +92,26 @@ async function read_write_Comments (collection) {
                 var list;
 
             try {
-                if(arr[0].endsWith('plz')) {
+                if(arr[0].endsWith('pat')) {
+                    await collection
+                          .find({VersicherungsNummer: arr[2]})
+                          .forEach(function(result){
+                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.Wohnort + '-->';
+                          })
+                } else if(arr[0].endsWith('plz')) {
                    await collection
                          .find({ PLZ_Ort: {$regex: arr[2], $options: "i" } })
                          .forEach(function(result){
                                    if(result.PLZ_Ort.startsWith(arr[2]) || result.PLZ_Ort.endsWith(arr[2]))
                                       transfer =  transfer + result.PLZ_Ort + '-->';
-                          })
+                         })
                 } else if(arr[0].endsWith('medE')) {
                    console.log(arr[2]+ "-----" + arr[3])
                    await collection
                          .find({ $and: [{Addresse: {$regex: arr[2], $options: "i" }}, {Fachbereich: {$regex: arr[3], $options: "i" } } ] })
                          .forEach(function(result){
                                   transfer =  transfer + result.Name +'°'+  result.Telephon +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Fachbereich + '-->';
-                          })
+                         })
                 }
 
                 resend.status(200).json({body: JSON.stringify(transfer.substring(0,transfer.length -3))});
