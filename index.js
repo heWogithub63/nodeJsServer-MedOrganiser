@@ -93,8 +93,7 @@ async function read_write_Comments (collection) {
                     await collection
                           .find({ PLZ_Ort: {$regex: arrv[2], $options: "i" } })
                           .forEach(function(result){
-                                    if(result.PLZ_Ort.startsWith(arrv[2]) || result.PLZ_Ort.endsWith(arrv[2]))
-                                       transfer =  transfer + result.PLZ_Ort + '-->';
+                                    transfer =  transfer + result.PLZ_Ort + '-->';
                           })
                 } else if(arrv[0].endsWith('medE')) {
 
