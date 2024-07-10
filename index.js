@@ -101,7 +101,7 @@ async function read_write_Comments (collection) {
                     await collection
                           .find({ $and: [{Addresse: {$regex: arrv[2], $options: "i" }}, {Fachbereich: {$regex: arrv[3], $options: "i" } } ] })
                           .forEach(function(result){
-                                   transfer =  transfer + result.'Titel/Name' +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
+                                   transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
                           })
                 }
 
