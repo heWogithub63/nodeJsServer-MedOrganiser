@@ -20,7 +20,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
  extended: true})); 
 app.use(cors())
 
-//Route that handles Anklage logic
+//Route that handles medOrganiser logic
 app.post('/medOrganiser', (req, res) =>{
 	const data = req.body;
     resend = res;
@@ -101,7 +101,7 @@ async function read_write_Comments (collection) {
                     await collection
                           .find({ $and: [{Addresse: {$regex: arrv[2], $options: "i" }}, {Fachbereich: {$regex: arrv[3], $options: "i" } } ] })
                           .forEach(function(result){
-                                   transfer =  transfer + result.Name +'°'+  result.Telephon +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Fachbereich + '-->';
+                                   transfer =  transfer + result.'Titel/Name' +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
                           })
                 }
 
