@@ -102,7 +102,7 @@ async function read_write_Comments (collection) {
                 } else if(arrv[0].endsWith('medE')) {
 
                     await collection
-                          .find({ $and: [{isAktiv: 'true'}, {Addresse: {$regex: arrv[2], $options: "i" }}, {Qualifikation: {$regex: arrv[3], $options: "i" } } ] })
+                          .find({isActive: 'true', Addresse: {$regex: arrv[2], $options: "i" }, Qualifikation: {$regex: arrv[3], $options: "i" } })
                           .forEach(function(result){
                                    transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
                           })
