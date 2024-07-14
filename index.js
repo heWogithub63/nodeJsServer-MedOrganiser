@@ -69,7 +69,7 @@ async function read_write_Comments (collection) {
 
       if(arrv[0] == 'Deploy') {
            var transfer ="";
-           if(arrv[0].endsWith('writeKalData') {
+           if(arrv[0].endsWith('writeKalData')) {
 
                  await collection
                            .updateOne(
