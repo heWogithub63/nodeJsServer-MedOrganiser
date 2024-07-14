@@ -69,15 +69,20 @@ async function read_write_Comments (collection) {
 
       if(arrv[0] == 'Deploy') {
            var transfer ="";
-           if(arrv[0].endsWith('writeKalData')) {
-                 arrv[3] = 'Kalenderblatt.Buchungen.' + arrv[3];
-                 await collection
-                           .updateOne({ Name: arrv[2] },{ $push: { [arrv[3]]: {Uhrzeit: arrv[4], Patient: arrv[5]}}});
+           try {
+               if(arrv[0].endsWith('writeKalData')) {
+
+                     arrv[3] = 'Kalenderblatt.Buchungen.' + arrv[3];
+                     await collection
+                               .updateOne({ Name: arrv[2] },{ $push: { [arrv[3]]: {Uhrzeit: arrv[4], Patient: arrv[5]}}});
+               }
+
+
+               transfer =  'Rückmeldung transfer succesfull -->completed';
+               resend.status(200).json({body: JSON.stringify(transfer)});
+           } catch (error) {
+                   resend.status(400).json({ error: error });
            }
-
-
-           transfer =  'Rückmeldung transfer succesfull -->completed';
-           resend.status(200).json({body: JSON.stringify(transfer)});
       }
 
       if(arrv[0].startsWith('Request')) {
