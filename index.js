@@ -69,8 +69,14 @@ async function read_write_Comments (collection) {
 
       if(arrv[0] == 'Deploy') {
            var transfer ="";
-               await collection
-                      .insertOne(obj);
+           if(arrv[0].endsWith('writeKalData') {
+
+                 await collection
+                           .updateOne(
+                                    { Name: arrv[2] },
+                                    { $push: { "Kalenderblatt.Buchungen."+arrv[3]+":{Uhrzeit:"+arrv[4]+", Patient:"+arrv[5]}}});
+           }
+
 
            transfer =  'Rückmeldung transfer succesfull -->completed';
            resend.status(200).json({body: JSON.stringify(transfer)});
@@ -98,11 +104,28 @@ async function read_write_Comments (collection) {
                 } else if(arrv[0].endsWith('medE')) {
 
                     await collection
-                          .find({ $and: [{Addresse: {$regex: arrv[2], $options: "i" }}, {Qualifikation: {$regex: arrv[3], $options: "i" } } ] })
+                          .find({ $and: [{isAktiv: 'true'}, {Addresse: {$regex: arrv[2], $options: "i" }}, {Qualifikation: {$regex: arrv[3], $options: "i" } } ] })
                           .forEach(function(result){
                                    transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
                           })
+                } else if(arrv[0].endsWith('readKalData')) {
+
+                    transfer = '^'
+                    console.log(transfer+"------"+"{Name:'"+arrv[2]+"'}, { Kalenderblatt: { $elemMatch : { Datum: '"+arrv[3]+"' }}});");
+
+                    await collection
+                           .find({Name:arrv[2]}, { Kalenderblatt: { $elemMatch : { Datum: arrv[3] }}})
+                           .forEach(function(result){
+                                   console.log(result.Kalenderblatt+"------"+result.Kalenderblatt.Datum+"------");
+                                   for(var i=0;i<result.Kalenderblatt.Buchung.length;i++) {
+                                       transfer =  transfer + Buchung[i][0]+"°"+ Buchung[i][1] +"^";
+                                   }
+                                   transfer = transfer +'-->';
+                           })
+
+
                 }
+
 
                 resend.status(200).json({body: JSON.stringify(transfer.substring(0,transfer.length -3))});
 
