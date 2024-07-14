@@ -72,7 +72,7 @@ async function read_write_Comments (collection) {
            if(arrv[0].endsWith('writeKalData')) {
 
                  await collection
-                           .updateOne({ Name: arrv[2] },{ $push: { 'Kalenderblatt.Buchungen.[arrv[3]': Uhrzeit: arrv[4], Patient: arrv[5]}});
+                           .updateOne({ Name: arrv[2] },{ $push: { 'Kalenderblatt.Buchungen.[arrv[3]]': Uhrzeit: arrv[4], Patient: arrv[5]}});
            }
 
 
