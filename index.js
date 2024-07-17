@@ -28,7 +28,7 @@ app.post('/medOrganiser', (req, res) =>{
     arrk = Object.keys(data);
     arrv = Object.values(data);
 
-    console.log("-->"+arrk +"-:-"+arrv);
+    //console.log("-->"+arrk +"-:-"+arrv);
 	requestPost().catch(console.error);
 })
 
@@ -72,11 +72,10 @@ async function read_write_Comments (collection) {
            try {
                if(arrv[0].endsWith('writeKalData')) {
 
-                     arrv[3] = 'Kalenderblatt.Buchungen.' + arrv[3];
-
+                     arrv[3] = 'KalenderBlatt.' + arrv[3];
                      await collection
-                               .updateOne({ Name: arrv[2] },{ $push: { [arrv[3]]: {Uhrzeit: arrv[4], Patient: arrv[5]}}})
-                               .catch(err=>console.log('inser failed'+err))
+                               .updateOne({ Name: arrv[2] }, { $push:{[arrv[3]] : { Patient: arrv[4], Uhrzeit: arrv[5] }} })
+                               .catch(err=>console.log('insert failed: '+err))
 
 
 
@@ -116,19 +115,35 @@ async function read_write_Comments (collection) {
                           })
                 } else if(arrv[0].endsWith('readKalData')) {
 
-                    transfer = '^'
-                    console.log(transfer+"------"+"{Name:'"+arrv[2]+"'}, { Kalenderblatt: { $elemMatch : { Datum: '"+arrv[3]+"' }}});");
+                    transfer = '';
 
-                    await collection
-                           .find({Name:arrv[2]}, { Kalenderblatt: { $elemMatch : { Datum: arrv[3] }}})
-                           .forEach(function(result){
-                                   console.log(result.Kalenderblatt+"------"+result.Kalenderblatt.Datum+"------");
-                                   for(var i=0;i<result.Kalenderblatt.Buchung.length;i++) {
-                                       transfer =  transfer + Buchung[i][0]+"°"+ Buchung[i][1] +"^";
-                                   }
-                                   transfer = transfer +'-->';
-                           })
+                    arrv[3] = 'KalenderBlatt.' + arrv[3];
 
+                       await collection
+                             .find({ Name: arrv[2] },  { projection: { _id: false,
+                                                             [arrv[3]]: true
+                                                           }
+                                                        })
+                             .forEach(function(data){
+                                     for(var i in data){
+                                         var key = i;
+                                         var val = data[i];
+
+                                         for(var j in val){
+                                             var sub_key = j;
+                                             var sub_val = val[j];
+                                             for(var k in sub_val) {
+                                                 var sub_key_1 = k;
+                                                 var sub_val_1 = sub_val[k];
+                                                 if(sub_val_1.Patient == arrv[4])
+                                                    transfer = transfer +"self>>" + sub_val_1.Patient + "°" + sub_val_1.Uhrzeit + '-->';
+                                                 else
+                                                      transfer = transfer +"other>>" + sub_val_1.Patient + "°" + sub_val_1.Uhrzeit + '-->';
+                                             }
+                                         }
+                                     }
+                                     })
+                             .catch(err=>console.log('insert failed: '+err))
 
                 }
 
