@@ -70,18 +70,31 @@ async function read_write_Comments (collection) {
       if(arrv[0].startsWith('Deploy')) {
            var transfer ="";
            try {
-               if(arrv[0].endsWith('writeKalData')) {
+               if(arrv[0].endsWith('kldataSave')) {
+                   if(arrv[2].startsWith('create>>')) {
+                       arrv[2] = arrv[2].substring(8);
+                       arrv[3] = 'KalenderBlatt.' + arrv[3];
+                       await collection
+                                .updateOne({ Name: arrv[2] }, { $push:{[arrv[3]] : { Patient: arrv[4], Uhrzeit: arrv[5], creationDate: parseInt(arrv[6]) }} })
+                                .catch(err=>console.log('insert failed: '+err))
+                   } else if(arrv[2].startsWith('delete>>')) {
+                              arrv[2] = arrv[2].substring(8);
+                              arrv[3] = 'KalenderBlatt.' + arrv[3];
+                              await collection
+                                       .updateOne({ Name: arrv[2] }, { $pull:{[arrv[3]] : { Patient: arrv[4], Uhrzeit: arrv[5], creationDate: parseInt(arrv[6]) }} })
+                                       .catch(err=>console.log('delete failed: '+err))
+                   }
 
-                     arrv[3] = 'KalenderBlatt.' + arrv[3];
-                     await collection
-                               .updateOne({ Name: arrv[2] }, { $push:{[arrv[3]] : { Patient: arrv[4], Uhrzeit: arrv[5] }} })
-                               .catch(err=>console.log('insert failed: '+err))
+               } else if(arrv[0].endsWith('dataSave')) {
 
-
-
-               transfer =  'Rückmeldung transfer succesfull -->completed';
-               resend.status(200).json({body: JSON.stringify(transfer)});
+                         await collection
+                                .updateOne({ [arrk[2]]: arrv[2] }, { $push:{Beschwerden: {[arrk[3]] : arrv[3], [arrk[4]] : arrv[4], [arrk[5]] : arrv[5], [arrk[6]] : arrv[6] }} })
+                                .catch(err=>console.log('insert failed: '+err))
                }
+
+               transfer =  'Recall'+arrv[0]+' transfer succesfull -->completed';
+               resend.status(200).json({body: JSON.stringify(transfer)});
+
            } catch (error) {
                    resend.status(400).json({ error: error });
            }
