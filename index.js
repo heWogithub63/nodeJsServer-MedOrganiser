@@ -88,6 +88,10 @@ async function read_write_Comments (collection) {
                } else if(arrv[0].endsWith('dataSave')) {
 
                          await collection
+                                .updateOne({ [arrk[2]]: arrv[2] }, { $pull:{Beschwerden: {[arrk[3]] : arrv[3], [arrk[4]] : arrv[4], [arrk[5]] : arrv[5], [arrk[6]] : arrv[6] }} })
+                                .catch(err=>console.log('delete failed: '+err))
+
+                         await collection
                                 .updateOne({ [arrk[2]]: arrv[2] }, { $push:{Beschwerden: {[arrk[3]] : arrv[3], [arrk[4]] : arrv[4], [arrk[5]] : arrv[5], [arrk[6]] : arrv[6] }} })
                                 .catch(err=>console.log('insert failed: '+err))
                }
