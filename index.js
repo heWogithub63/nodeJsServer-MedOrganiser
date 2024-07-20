@@ -75,8 +75,13 @@ async function read_write_Comments (collection) {
                        arrv[2] = arrv[2].substring(8);
                        arrv[3] = 'KalenderBlatt.' + arrv[3];
                        await collection
+                                .updateOne({ Name: arrv[2] }, { $pull:{[arrv[3]] : { Patient: arrv[4], Uhrzeit: arrv[5], creationDate: parseInt(arrv[6]) }} })
+                                .catch(err=>console.log('insert failed: '+err))
+
+                       await collection
                                 .updateOne({ Name: arrv[2] }, { $push:{[arrv[3]] : { Patient: arrv[4], Uhrzeit: arrv[5], creationDate: parseInt(arrv[6]) }} })
                                 .catch(err=>console.log('insert failed: '+err))
+                                
                    } else if(arrv[2].startsWith('delete>>')) {
                               arrv[2] = arrv[2].substring(8);
                               arrv[3] = 'KalenderBlatt.' + arrv[3];
