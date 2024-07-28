@@ -62,7 +62,8 @@ async function requestPost() {
         }
         
                    
-}
+}           Einnahme: medEd[n+2]
+                                            }
 function getRandomInt(min, max) {
           min = Math.ceil(min);
           max = Math.floor(max);
@@ -81,6 +82,9 @@ async function read_write_Comments (collection) {
            try {
 
                if(arrv[0].endsWith('saveAufn')) {
+                      delete obj.Caller;
+                      delete obj.Collection;
+                      delete obj.VersicherungsNummer;
                       var VersNr = "";
                       var next = false;
                        await collection
@@ -96,12 +100,13 @@ async function read_write_Comments (collection) {
                            next = false;
                            var VersNr;
                            while (!stop) {
-                                VersNr = arrv[4].substring(0,1) + getRandomInt(0, 999999999);
+                                VersNr = arrv[3].substring(0,1) + getRandomInt(0, 999999999);
 
                                 await collection
                                             .findOne({VersicherungsNummer: VersNr})
                                             .then(res=> { console.log("--2--"+res);
                                                           if(res == null) {
+                                                              Object.assign({VersicherungsNummer:VersNr},obj);
                                                               next = true;
                                                               stop = true;
                                                           }
