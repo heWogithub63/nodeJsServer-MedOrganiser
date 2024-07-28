@@ -62,8 +62,8 @@ async function requestPost() {
         }
         
                    
-}           Einnahme: medEd[n+2]
-                                            }
+}
+
 function getRandomInt(min, max) {
           min = Math.ceil(min);
           max = Math.floor(max);
@@ -90,7 +90,7 @@ async function read_write_Comments (collection) {
                        await collection
                                 .findOne({ $and: [{[arrk[4]]: arrv[4]}, {[arrk[5]]: arrv[5]}]})
                                 .then(data=> {result = data;
-                                              console.log("--1--"+result);
+
                                 	          if(result != null)
                                 	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[4]+' >> '+arrv[5]+' ist bereits existent';
                                 	          else next = true;
@@ -104,7 +104,7 @@ async function read_write_Comments (collection) {
 
                                 await collection
                                             .findOne({VersicherungsNummer: VersNr})
-                                            .then(res=> { console.log("--2--"+res);
+                                            .then(res=> {
                                                           if(res == null) {
                                                               Object.assign({VersicherungsNummer:VersNr},obj);
                                                               next = true;
@@ -117,7 +117,7 @@ async function read_write_Comments (collection) {
                                next = false;
                                await collection
                                         .insertOne(obj)
-                                        .then(data=> { console.log("--3--"+data);
+                                        .then(data=> {
                                                        transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr;})
                                         .catch(err=>console.log('insert failed: '+err));
                        }
