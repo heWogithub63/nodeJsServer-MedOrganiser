@@ -63,14 +63,62 @@ async function requestPost() {
         
                    
 }
+function getRandomInt(min, max) {
+          min = Math.ceil(min);
+          max = Math.floor(max);
+          var erg = ''+Math.floor(Math.random() * (max - min + 1));
+          var z = '000000000'
 
+          if(erg.length < (""+max).length)
+             erg = erg + z.substring(0,(""+max).length - erg.length);
+          return erg;
+}
 
 async function read_write_Comments (collection) {
 
       if(arrv[0].startsWith('Deploy')) {
            var transfer ="";
            try {
-               if(arrv[0].endsWith('kldataSave')) {
+
+               if(arrv[0].endsWith('saveAufn')) {
+                      var VersNr = "";
+                      var next = false;
+                       await collection
+                                .findOne({ $and: [{[arrk[4]]: arrv[4]}, {[arrk[5]]: arrv[5]}]})
+                                .then(data=> {result = data;
+                                              console.log("--1--"+result);
+                                	          if(result != null)
+                                	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[4]+' >> '+arrv[5]+' ist bereits existent';
+                                	          else next = true;
+                                	          });
+                       if (next) {
+                           var stop = false;
+                           next = false;
+                           var VersNr;
+                           while (!stop) {
+                                VersNr = arrv[4].substring(0,1) + getRandomInt(0, 999999999);
+
+                                await collection
+                                            .findOne({VersicherungsNummer: VersNr})
+                                            .then(res=> { console.log("--2--"+res);
+                                                          if(res == null) {
+                                                              next = true;
+                                                              stop = true;
+                                                          }
+                                                     });
+                           }
+                       }
+                       if (next) {
+                               next = false;
+                               await collection
+                                        .insertOne(obj)
+                                        .then(data=> { console.log("--3--"+data);
+                                                       transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr;})
+                                        .catch(err=>console.log('insert failed: '+err));
+                       }
+
+               } else if(arrv[0].endsWith('kldataSave')) {
+
                    if(arrv[2].startsWith('create>>')) {
                        arrv[2] = arrv[2].substring(8);
                        arrv[3] = 'KalenderBlatt.' + arrv[3];
@@ -81,7 +129,7 @@ async function read_write_Comments (collection) {
                        await collection
                                 .updateOne({ Name: arrv[2] }, { $push:{[arrv[3]] : { Patient: arrv[4], Uhrzeit: arrv[5], creationDate: parseInt(arrv[6]) }} })
                                 .catch(err=>console.log('insert failed: '+err))
-                                
+
                    } else if(arrv[2].startsWith('delete>>')) {
                               arrv[2] = arrv[2].substring(8);
                               arrv[3] = 'KalenderBlatt.' + arrv[3];
@@ -89,6 +137,7 @@ async function read_write_Comments (collection) {
                                        .updateOne({ Name: arrv[2] }, { $pull:{[arrv[3]] : { Patient: arrv[4], Uhrzeit: arrv[5], creationDate: parseInt(arrv[6]) }} })
                                        .catch(err=>console.log('delete failed: '+err))
                    }
+                   transfer = 'successfull';
 
                } else if(arrv[0].endsWith('dataSave')) {
 
@@ -99,9 +148,10 @@ async function read_write_Comments (collection) {
                          await collection
                                 .updateOne({ [arrk[2]]: arrv[2] }, { $push:{Beschwerden: {[arrk[3]] : arrv[3], [arrk[4]] : arrv[4], [arrk[5]] : arrv[5], [arrk[6]] : arrv[6] }} })
                                 .catch(err=>console.log('insert failed: '+err))
+                         transfer = 'successfull';
                }
 
-               transfer =  'Recall'+arrv[0]+' transfer succesfull -->completed';
+               transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
                resend.status(200).json({body: JSON.stringify(transfer)});
 
            } catch (error) {
@@ -119,7 +169,7 @@ async function read_write_Comments (collection) {
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
                           .forEach(function(result){
-                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.Wohnort + '-->';
+                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.NameVorname+'°'+result.Geburtsdatum+'°'+result.PLZWohnort + '-->';
                           })
                 } else if(arrv[0].endsWith('plz')) {
 
@@ -167,6 +217,14 @@ async function read_write_Comments (collection) {
                                      })
                              .catch(err=>console.log('insert failed: '+err))
 
+                } else if(arrv[0].endsWith('diagnosen')) {
+
+                             await collection
+                                     .find({$or: [{ICD10: {$regex:arrv[2]}}, {Diagnose: {$regex:arrv[2]}}]},{ _id: 0 })
+                                     .forEach(function(result){
+
+                                              transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
+                                     })
                 }
 
 
