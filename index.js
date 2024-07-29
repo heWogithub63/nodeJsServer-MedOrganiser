@@ -88,7 +88,7 @@ async function read_write_Comments (collection) {
                       var VersNr = "";
                       var next = false;
                        await collection
-                                .findOne({ $and: [{[arrk[4]]: arrv[4]}, {[arrk[5]]: arrv[5]}]})
+                                .findOne({ $and: [{[arrk[5]]: arrv[5]}, {[arrk[6]]: arrv[6]}]})
                                 .then(data=> {
                                 	          if(data != null)
                                 	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[4]+' >> '+arrv[5]+' ist bereits existent';
@@ -99,7 +99,7 @@ async function read_write_Comments (collection) {
                            next = false;
                            var VersNr = "";
                            while (!stop) {
-                                VersNr = arrv[4].substring(0,1) + getRandomInt(0, 999999999);
+                                VersNr = arrv[5].substring(0,1) + getRandomInt(0, 999999999);
 
                                 await collection
                                             .findOne({VersicherungsNummer: VersNr})
