@@ -28,7 +28,7 @@ app.post('/medOrganiser', (req, res) =>{
     arrk = Object.keys(data);
     arrv = Object.values(data);
 
-    //console.log("-->"+arrk +"-:-"+arrv);
+    //console.log("-->"+obj);
 	requestPost().catch(console.error);
 })
 
@@ -84,29 +84,28 @@ async function read_write_Comments (collection) {
                if(arrv[0].endsWith('saveAufn')) {
                       delete obj.Caller;
                       delete obj.Collection;
-                      delete obj.VersicherungsNummer;
+
                       var VersNr = "";
                       var next = false;
                        await collection
                                 .findOne({ $and: [{[arrk[4]]: arrv[4]}, {[arrk[5]]: arrv[5]}]})
-                                .then(data=> {result = data;
-
-                                	          if(result != null)
+                                .then(data=> {
+                                	          if(data != null)
                                 	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[4]+' >> '+arrv[5]+' ist bereits existent';
                                 	          else next = true;
                                 	          });
                        if (next) {
                            var stop = false;
                            next = false;
-                           var VersNr;
+                           var VersNr = "";
                            while (!stop) {
-                                VersNr = arrv[3].substring(0,1) + getRandomInt(0, 999999999);
+                                VersNr = arrv[4].substring(0,1) + getRandomInt(0, 999999999);
 
                                 await collection
                                             .findOne({VersicherungsNummer: VersNr})
                                             .then(res=> {
                                                           if(res == null) {
-                                                              Object.assign({VersicherungsNummer:VersNr},obj);
+                                                              obj.VersicherungsNummer = VersNr;
                                                               next = true;
                                                               stop = true;
                                                           }
@@ -117,7 +116,7 @@ async function read_write_Comments (collection) {
                                next = false;
                                await collection
                                         .insertOne(obj)
-                                        .then(data=> {
+                                        .then(data=> { console.log("--3--"+data);
                                                        transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr;})
                                         .catch(err=>console.log('insert failed: '+err));
                        }
