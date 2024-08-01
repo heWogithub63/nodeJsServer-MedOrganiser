@@ -84,6 +84,7 @@ async function read_write_Comments (collection) {
                if(arrv[0].endsWith('saveAufn')) {
                       delete obj.Caller;
                       delete obj.Collection;
+                      var isPersonal = '';
 
                       var VersNr = "";
                       var next = false;
@@ -91,7 +92,7 @@ async function read_write_Comments (collection) {
                                 .findOne({ $and: [{[arrk[5]]: arrv[5]}, {[arrk[6]]: arrv[6]}]})
                                 .then(data=> {
                                 	          if(data != null)
-                                	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[4]+' >> '+arrv[5]+' ist bereits existent';
+                                	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[5]+' >> '+arrv[6]+' ist bereits existent';
                                 	          else next = true;
                                 	          });
                        if (next) {
@@ -112,6 +113,36 @@ async function read_write_Comments (collection) {
                                                      });
                            }
                        }
+                       if (next) {
+                           next = false;
+
+                           var ActivStatus = arrv[11];
+                           if(!ActivStatus.equals('Patient')) {
+                              if (ActivStatus.equals('Medizinisches Personal')) {
+                                   await client.db("MedOrganiser").collection(medEinrichtung)
+                                            .findOne({[arrk[5]] : {$regex: arrv[5]}})
+                                            .then(data=> {
+                                                          if(data != null) {
+                                                             isPersonal = 'Arzt'
+                                                             next = true;
+                                                          } else {
+                                                              obj.ActivStatus = 'Patient';
+                                                              next = true;
+                                                          }
+                                                     });
+                              } else
+                                 obj.ActivStatus = 'Patient';
+                           }
+                       }
+
+                       if(next && isPersonal.equals('Arzt')) {
+                          await client.db("MedOrganiser").collection(medEinrichtung)
+                                           .updateOne({[arrk[5]] : {$regex: arrv[5]}}, {$push: {VersicherungsNummer: VersNr}});
+
+                          await client.db("MedOrganiser").collection(PraxisKalender)
+                                           .updateOne({[arrk[5]] : {$regex: arrv[5]}}, {$push: {VersicherungsNummer: VersNr}});
+                       }
+
                        if (next) {
                                next = false;
                                await collection
