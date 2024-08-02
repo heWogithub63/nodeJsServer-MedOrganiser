@@ -3,6 +3,8 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const port =  process.env.PORT || 3030;
+var collection_1;
+var collection_2;
 
 var obj;
 var arrk,arrv;
@@ -28,7 +30,7 @@ app.post('/medOrganiser', (req, res) =>{
     arrk = Object.keys(data);
     arrv = Object.values(data);
 
-    //console.log("-->"+obj);
+    console.log("-->"+JSON.stringify(obj));
 	requestPost().catch(console.error);
 })
 
@@ -42,6 +44,8 @@ async function requestPost() {
 	const uri = "mongodb+srv://wh:admin01@cluster0.kmwrpfb.mongodb.net/?retryWrites=true&w=majority";
         const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         const collection = client.db("MedOrganiser").collection(arrv[1]);
+        collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
+        collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
         try {
                 await client.connect((err) => {
 		  if (err) {
@@ -89,8 +93,10 @@ async function read_write_Comments (collection) {
                       var VersNr = "";
                       var next = false;
                        await collection
-                                .findOne({ $and: [{[arrk[5]]: arrv[5]}, {[arrk[6]]: arrv[6]}]})
-                                .then(data=> {
+                                .findOne({$and: [{[arrk[5]]: {$regex: arrv[5].substring(0,arrv[5].indexOf(' '))}}, {[arrk[5]]: {$regex: arrv[5].substring(arrv[5].indexOf(' ')+1)}},
+                                                  {[arrk[6]]: arrv[6]}]})
+
+                                .then(data=> { console.dir("first--"+data);
                                 	          if(data != null)
                                 	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[5]+' >> '+arrv[6]+' ist bereits existent';
                                 	          else next = true;
@@ -104,8 +110,8 @@ async function read_write_Comments (collection) {
 
                                 await collection
                                             .findOne({VersicherungsNummer: VersNr})
-                                            .then(res=> {
-                                                          if(res == null) {
+                                            .then(data=> { console.dir("second--"+data);
+                                                          if(data == null) {
                                                               obj.VersicherungsNummer = VersNr;
                                                               next = true;
                                                               stop = true;
@@ -114,14 +120,16 @@ async function read_write_Comments (collection) {
                            }
                        }
                        if (next) {
-                           next = false;
-
                            var ActivStatus = arrv[11];
-                           if(!ActivStatus.equals('Patient')) {
-                              if (ActivStatus.equals('Medizinisches Personal')) {
-                                   await client.db("MedOrganiser").collection(medEinrichtung)
-                                            .findOne({[arrk[5]] : {$regex: arrv[5]}})
-                                            .then(data=> {
+
+                           if(ActivStatus != 'Patient') {
+                              if (ActivStatus == 'Medizinisches Personal') {
+
+                                   next = false;
+
+                                   await collection_1
+                                            .findOne({$and: [{[arrk[5]]: {$regex: arrv[5].substring(0,arrv[5].indexOf(' '))}}, {[arrk[5]]: {$regex: arrv[5].substring(arrv[5].indexOf(' ')+1)}}]})
+                                            .then(data=> {console.dir("third--"+data);
                                                           if(data != null) {
                                                              isPersonal = 'Arzt'
                                                              next = true;
@@ -135,19 +143,22 @@ async function read_write_Comments (collection) {
                            }
                        }
 
-                       if(next && isPersonal.equals('Arzt')) {
-                          await client.db("MedOrganiser").collection(medEinrichtung)
-                                           .updateOne({[arrk[5]] : {$regex: arrv[5]}}, {$push: {VersicherungsNummer: VersNr}});
+                       if(next && isPersonal == 'Arzt') {
+                          console.dir("fourth--"+isPersonal+"----VersNr");
+                          await collection_1
+                                   .updateOne({$and: [{[arrk[5]]: {$regex: arrv[5].substring(0,arrv[5].indexOf(' '))}}, {[arrk[5]]: {$regex: arrv[5].substring(arrv[5].indexOf(' ')+1)}}]}
+                                                                               , {$set: {VersicherungsNummer: VersNr}});
 
-                          await client.db("MedOrganiser").collection(PraxisKalender)
-                                           .updateOne({[arrk[5]] : {$regex: arrv[5]}}, {$push: {VersicherungsNummer: VersNr}});
+                          await collection_2
+                                   .updateOne({$and: [{[arrk[5]]: {$regex: arrv[5].substring(0,arrv[5].indexOf(' '))}}, {[arrk[5]]: {$regex: arrv[5].substring(arrv[5].indexOf(' ')+1)}}]}
+                                                                                                                          , {$set: {VersicherungsNummer: VersNr}});
                        }
 
                        if (next) {
                                next = false;
                                await collection
                                         .insertOne(obj)
-                                        .then(data=> { console.log("--3--"+data);
+                                        .then(data=> { console.dir("fifth--"+data);
                                                        transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr;})
                                         .catch(err=>console.log('insert failed: '+err));
                        }
@@ -204,7 +215,7 @@ async function read_write_Comments (collection) {
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
                           .forEach(function(result){
-                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.NameVorname+'°'+result.Geburtsdatum+'°'+result.PLZWohnort + '-->';
+                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result['PLZ Wohnort'] + '-->';
                           })
                 } else if(arrv[0].endsWith('plz')) {
 
