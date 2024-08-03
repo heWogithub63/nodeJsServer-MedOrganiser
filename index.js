@@ -120,7 +120,7 @@ async function read_write_Comments (collection) {
                            }
                        }
                        if (next) {
-                           var AktivStatus = arrv[11];
+                           var AktivStatus = arrv[12];
 
                            if(AktivStatus != 'Patient') {
                               if (AktivStatus == 'Medizinisches Personal') {
@@ -223,7 +223,7 @@ async function read_write_Comments (collection) {
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
                           .forEach(function(result){
-                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result['PLZ Wohnort'] + '-->';
+                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.PLZWohnort + '-->';
                           })
                 } else if(arrv[0].endsWith('plz')) {
 
