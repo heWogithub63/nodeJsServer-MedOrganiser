@@ -30,7 +30,7 @@ app.post('/medOrganiser', (req, res) =>{
     arrk = Object.keys(data);
     arrv = Object.values(data);
 
-    console.log("-->"+JSON.stringify(obj));
+    //console.log("-->"+JSON.stringify(obj));
 	requestPost().catch(console.error);
 })
 
@@ -213,9 +213,23 @@ async function read_write_Comments (collection) {
                 if(arrv[0].endsWith('patDaten')) {
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
-                          .forEach(function(result){
-                                    if(result != null)
-                                        transfer =  transfer + JSON.stringify(result) + '-->';
+                          .forEach(function(obj){
+                                    if(obj != null) {
+
+                                        Object.keys(obj).forEach((k, i) => {
+                                            if (!k.includes('Datum') && !k.includes('_id') && !k.includes('Medikamente')) {
+                                                transfer = transfer +k+"---"+obj[k]+'°';
+                                            } else if(k.includes('Medikamente')) {
+                                                     transfer = transfer +k+'^';
+                                                     Object.keys(obj[k]).forEach((j, l) => {
+                                                           transfer = transfer+ JSON.stringify(obj[k][j]) +'^';
+                                                     });
+                                                     transfer = transfer+'°';
+                                            }
+                                        });
+
+                                        transfer =  transfer+ '-->';
+                                    }
                           })
 
                 } else if(arrv[0].endsWith('pat')) {
@@ -223,7 +237,7 @@ async function read_write_Comments (collection) {
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
                           .forEach(function(result){
-                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.PLZWohnort + '-->';
+                                    transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.PLZWohnort+ '-->';
                           })
                 } else if(arrv[0].endsWith('plz')) {
 
