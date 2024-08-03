@@ -210,7 +210,15 @@ async function read_write_Comments (collection) {
                 var list;
 
             try {
-                if(arrv[0].endsWith('pat')) {
+                if(arrv[0].endsWith('patDaten')) {
+                    await collection
+                          .find({VersicherungsNummer: arrv[2]})
+                          .forEach(function(result){
+                                    if(result != null)
+                                        transfer =  transfer + JSON.stringify(result) + '-->';
+                          })
+
+                } else if(arrv[0].endsWith('pat')) {
 
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
