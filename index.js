@@ -93,12 +93,12 @@ async function read_write_Comments (collection) {
                       var VersNr = "";
                       var next = false;
                        await collection
-                                .findOne({$and: [{[arrk[5]]: {$regex: arrv[5].substring(0,arrv[5].indexOf(' '))}}, {[arrk[5]]: {$regex: arrv[5].substring(arrv[5].indexOf(' ')+1)}},
-                                                  {[arrk[6]]: arrv[6]}]})
+                                .findOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}},
+                                                  {[arrk[7]]: arrv[7]}]})
 
                                 .then(data=> { console.dir("first--"+data);
                                 	          if(data != null)
-                                	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[5]+' >> '+arrv[6]+' ist bereits existent';
+                                	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[6]+' >> '+arrv[7]+' ist bereits existent';
                                 	          else next = true;
                                 	          });
                        if (next) {
@@ -106,7 +106,7 @@ async function read_write_Comments (collection) {
                            next = false;
                            var VersNr = "";
                            while (!stop) {
-                                VersNr = arrv[5].substring(0,1) + getRandomInt(0, 999999999);
+                                VersNr = arrv[6].substring(0,1) + getRandomInt(0, 999999999);
 
                                 await collection
                                             .findOne({VersicherungsNummer: VersNr})
@@ -128,7 +128,7 @@ async function read_write_Comments (collection) {
                                    next = false;
 
                                    await collection_1
-                                            .findOne({$and: [{[arrk[5]]: {$regex: arrv[5].substring(0,arrv[5].indexOf(' '))}}, {[arrk[5]]: {$regex: arrv[5].substring(arrv[5].indexOf(' ')+1)}}]})
+                                            .findOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}}]})
                                             .then(data=> {console.dir("third--"+data);
                                                           if(data != null) {
                                                              isPersonal = 'Arzt'
@@ -146,11 +146,11 @@ async function read_write_Comments (collection) {
                        if(next && isPersonal == 'Arzt') {
                           console.dir("fourth--"+isPersonal+"----VersNr");
                           await collection_1
-                                   .updateOne({$and: [{[arrk[5]]: {$regex: arrv[5].substring(0,arrv[5].indexOf(' '))}}, {[arrk[5]]: {$regex: arrv[5].substring(arrv[5].indexOf(' ')+1)}}]}
+                                   .updateOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}}]}
                                                                                , {$set: {VersicherungsNummer: VersNr}});
 
                           await collection_2
-                                   .updateOne({$and: [{[arrk[5]]: {$regex: arrv[5].substring(0,arrv[5].indexOf(' '))}}, {[arrk[5]]: {$regex: arrv[5].substring(arrv[5].indexOf(' ')+1)}}]}
+                                   .updateOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}}]}
                                                                                                                           , {$set: {VersicherungsNummer: VersNr}});
                        }
 
