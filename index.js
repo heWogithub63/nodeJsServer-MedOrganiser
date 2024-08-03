@@ -120,10 +120,10 @@ async function read_write_Comments (collection) {
                            }
                        }
                        if (next) {
-                           var ActivStatus = arrv[11];
+                           var AktivStatus = arrv[11];
 
-                           if(ActivStatus != 'Patient') {
-                              if (ActivStatus == 'Medizinisches Personal') {
+                           if(AktivStatus != 'Patient') {
+                              if (AktivStatus == 'Medizinisches Personal') {
 
                                    next = false;
 
@@ -134,12 +134,12 @@ async function read_write_Comments (collection) {
                                                              isPersonal = 'Arzt'
                                                              next = true;
                                                           } else {
-                                                              obj.ActivStatus = 'Patient';
+                                                              obj.AktivStatus = 'Patient';
                                                               next = true;
                                                           }
                                                      });
                               } else
-                                 obj.ActivStatus = 'Patient';
+                                 obj.AktivStatus = 'Patient';
                            }
                        }
 
