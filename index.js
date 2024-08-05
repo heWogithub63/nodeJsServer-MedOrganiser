@@ -252,33 +252,31 @@ async function read_write_Comments (collection) {
                 } else if(arrv[0].endsWith('readKalData')) {
 
                     transfer = '';
-
-                    arrv[3] = 'KalenderBlatt.' + arrv[3];
+                    var patient = "";
+                    var uhrzeit = "";
+                    var datum = "";
+                    arrk[4] = 'KalenderBlatt.'+[arrk[4]];
 
                        await collection
-                             .find({ Name: arrv[2] },  { projection: { _id: false,
-                                                             [arrv[3]]: true
-                                                           }
-                                                        })
+                             .find({$and:[{[arrk[2]]: arrv[2]}, {[arrk[4]]: parseInt(arrv[4])}]})
                              .forEach(function(data){
-                                     for(var i in data){
+
+                                    for(var i in data){
                                          var key = i;
                                          var val = data[i];
-
-                                         for(var j in val){
-                                             var sub_key = j;
-                                             var sub_val = val[j];
-                                             for(var k in sub_val) {
-                                                 var sub_key_1 = k;
-                                                 var sub_val_1 = sub_val[k];
-                                                 if(sub_val_1.Patient == arrv[4])
-                                                    transfer = transfer +"self>>" + sub_val_1.Patient + "°" + sub_val_1.Uhrzeit + '-->';
-                                                 else
-                                                      transfer = transfer +"other>>" + sub_val_1.Patient + "°" + sub_val_1.Uhrzeit + '-->';
-                                             }
+                                         if(key == 'KalenderBlatt') {
+                                           patient = uhrzeit = val.map(item => item.Patient);
+                                           uhrzeit = val.map(item => item.TerminierteUhrzeit);
+                                           datum = val.map(item => item.TerminiertesDatum);
                                          }
-                                     }
-                                     })
+                                    }
+
+                                    if(patient == arrv[3])
+                                       transfer = transfer +"self>>" + patient + "°" + uhrzeit + '-->';
+                                    else
+                                         transfer = transfer +"other>>" + patient + "°" + uhrzeit + '-->';
+
+                             })
                              .catch(err=>console.log('insert failed: '+err))
 
                 } else if(arrv[0].endsWith('diagnosen')) {
