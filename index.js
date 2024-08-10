@@ -219,7 +219,7 @@ async function read_write_Comments (collection) {
                                                      transfer = transfer +k+'^';
                                                      Object.keys(obj[k]).forEach((j, l) => {
                                                            transfer = transfer+ JSON.stringify(obj[k][j]) +'^';
-                                                     });
+                                                      });
                                                      transfer = transfer+'°';
                                             }
                                         });
@@ -228,6 +228,13 @@ async function read_write_Comments (collection) {
                                     }
                           })
 
+                } else if(arrv[0].endsWith('patDiagnostik')) {
+                    arrk[3] = 'Diagnostik.'+arrk[3];
+                    await collection
+                          .find({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]: {[arrk[4]]: {$and: [{$lte:{parseInt(arrv[4])}, {$gte:{parseInt(arrv[5])}}}]}}}])
+                          .forEach(function(result){
+
+                          })
                 } else if(arrv[0].endsWith('pat')) {
 
                     await collection
@@ -265,7 +272,7 @@ async function read_write_Comments (collection) {
                                          var key = i;
                                          var val = data[i];
                                          if(key == 'KalenderBlatt') {
-                                           patient = uhrzeit = val.map(item => item.Patient);
+                                           patient = val.map(item => item.Patient);
                                            uhrzeit = val.map(item => item.TerminierteUhrzeit);
                                            datum = val.map(item => item.TerminiertesDatum);
                                          }
