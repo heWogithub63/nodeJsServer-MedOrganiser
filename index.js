@@ -228,14 +228,14 @@ async function read_write_Comments (collection) {
                                     }
                           })
 
-                } else if(arrv[0].endsWith('patDiagnostik')) {
+                } /*else if(arrv[0].endsWith('patDiagnostik')) {
                     arrk[3] = 'Diagnostik.'+arrk[3];
                     await collection
-                          .find({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]: {[arrk[4]]: {$and: [{$lte:{parseInt(arrv[4])}, {$gte:{parseInt(arrv[5])}}}]}}}])
+                          .find({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]]: {[arrk[4]]: {$and: [{$lte:{parseInt(arrv[4])}, {$gte:{parseInt(arrv[5])}}}]}}}])
                           .forEach(function(result){
 
                           })
-                } else if(arrv[0].endsWith('pat')) {
+                }*/ else if(arrv[0].endsWith('pat')) {
 
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
