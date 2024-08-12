@@ -228,14 +228,36 @@ async function read_write_Comments (collection) {
                                     }
                           })
 
-                } /*else if(arrv[0].endsWith('patDiagnostik')) {
-                    arrk[3] = 'Diagnostik.'+arrk[3];
+                } else if(arrv[0].endsWith('patDiagnostik')) {
+
                     await collection
-                          .find({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]]: {[arrk[4]]: {$and: [{$lte:{parseInt(arrv[4])}, {$gte:{parseInt(arrv[5])}}}]}}}])
-                          .forEach(function(result){
+                          .find( {[arrk[2]]: arrv[2]})
+                          .forEach(function(data){
+                                 for(var i in data){
+                                      var key = i;
+                                      var val = data[i];
+
+                                      if(key == 'Diagnostik') {
+                                        for(var j in val){
+                                           var key1 = j;
+                                           var val1 = val[j];
+                                           for(var l in val1) {
+                                               var key2 = l;
+                                               var val2 = val1[l];
+
+                                               if(key2 == arrv[3]) {
+                                                  var map = val2.map(item => item.Datum+'°'+item.Behandler+'°'+item.PDFs+'-->');
+
+                                                  transfer = transfer + map;
+                                               }
+
+                                           }
+                                        }
+                                      }
+                                 }
 
                           })
-                }*/ else if(arrv[0].endsWith('pat')) {
+                } else if(arrv[0].endsWith('pat')) {
 
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
@@ -272,16 +294,11 @@ async function read_write_Comments (collection) {
                                          var key = i;
                                          var val = data[i];
                                          if(key == 'KalenderBlatt') {
-                                           patient = val.map(item => item.Patient);
-                                           uhrzeit = val.map(item => item.TerminierteUhrzeit);
-                                           datum = val.map(item => item.TerminiertesDatum);
+                                           var map = val.map(item => item.Patient+'°'+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit);
+                                           transfer = transfer + map;
                                          }
                                     }
-
-                                    if(patient == arrv[3])
-                                       transfer = transfer +"self>>" + patient + "°" + uhrzeit + '-->';
-                                    else
-                                         transfer = transfer +"other>>" + patient + "°" + uhrzeit + '-->';
+                                    transfer = transfer.replaceAll(',','-->');
 
                              })
                              .catch(err=>console.log('insert failed: '+err))
