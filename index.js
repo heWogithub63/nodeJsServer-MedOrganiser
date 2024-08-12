@@ -280,14 +280,10 @@ async function read_write_Comments (collection) {
                           })
                 } else if(arrv[0].endsWith('readKalData')) {
 
-                    transfer = '';
-                    var patient = "";
-                    var uhrzeit = "";
-                    var datum = "";
-                    arrk[4] = 'KalenderBlatt.'+[arrk[4]];
+                    transfer = "";
 
                        await collection
-                             .find({$and:[{[arrk[2]]: arrv[2]}, {[arrk[4]]: parseInt(arrv[4])}]})
+                             .find({[arrk[2]]: arrv[2]})
                              .forEach(function(data){
 
                                     for(var i in data){
@@ -295,6 +291,7 @@ async function read_write_Comments (collection) {
                                          var val = data[i];
                                          if(key == 'KalenderBlatt') {
                                            var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
+
                                            transfer = transfer + map;
                                          }
                                     }
