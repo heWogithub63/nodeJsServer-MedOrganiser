@@ -294,11 +294,10 @@ async function read_write_Comments (collection) {
                                          var key = i;
                                          var val = data[i];
                                          if(key == 'KalenderBlatt') {
-                                           var map = val.map(item => item.Patient+'°'+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit);
+                                           var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
                                            transfer = transfer + map;
                                          }
                                     }
-                                    transfer = transfer.replaceAll(',','-->');
 
                              })
                              .catch(err=>console.log('insert failed: '+err))
