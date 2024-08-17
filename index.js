@@ -3,6 +3,11 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const port =  process.env.PORT || 3030;
+
+const { MongoClient, GridFSBucket } = require('mongodb');
+const fs = require('fs');
+
+var client;
 var collection_1;
 var collection_2;
 
@@ -12,18 +17,15 @@ var resend;
 var commentsCount = 0;
 var complainsCount = 0;
 
-
-const {MongoClient} = require('mongodb');
-
 // We are using our packages here
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
- extended: true})); 
-app.use(cors())
+ extended: true}));
+app.use(cors());
 
 //Route that handles medOrganiser logic
-app.post('/medOrganiser', (req, res) =>{
+app.post('/MedOrganiser', (req, res) =>{
 	const data = req.body;
     resend = res;
     obj = data;
@@ -42,7 +44,7 @@ app.listen(port, ()=>{
 
 async function requestPost() {
 	const uri = "mongodb+srv://wh:admin01@cluster0.kmwrpfb.mongodb.net/?retryWrites=true&w=majority";
-        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+        client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         const collection = client.db("MedOrganiser").collection(arrv[1]);
         collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
         collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
@@ -66,6 +68,37 @@ async function requestPost() {
         }
         
                    
+}
+
+async function uploadFile(path) {
+    const db = client.db("MedOrganiser");
+    const bucket = new GridFSBucket(db, {
+                           bucketName: 'DiagnosticPdfFiles',
+                           [arrk[2]]: arrv[2]
+                   });
+
+    // Read the file stream and upload
+    fs.createReadStream(path).pipe(bucket.openUploadStream(path.split('/').pop()))
+        .on('error', function(error) {
+            console.log('Error:', error);
+        })
+        .on('finish', function() {
+            console.log('File uploaded successfully.');
+        });
+}
+
+async function downloadFile(objId,path) {
+    const db = client.db("MedOrganiser");
+    const bucket = new GridFSBucket(db);
+
+    // Read the file stream and upload
+    fs.createReadStream(objId).pipe(bucket.openDownloadStream(path))
+        .on('error', function(error) {
+            console.log('Error:', error);
+        })
+        .on('finish', function() {
+            console.log('File downloaded successfully.');
+        });
 }
 
 function getRandomInt(min, max) {
@@ -234,28 +267,13 @@ async function read_write_Comments (collection) {
                           .find( {[arrk[2]]: arrv[2]})
                           .forEach(function(data){
                                  for(var i in data){
-                                      var key = i;
-                                      var val = data[i];
-
-                                      if(key == 'Diagnostik') {
-                                        for(var j in val){
-                                           var key1 = j;
-                                           var val1 = val[j];
-                                           for(var l in val1) {
-                                               var key2 = l;
-                                               var val2 = val1[l];
-
-                                               if(key2 == arrv[3]) {
-                                                  var map = val2.map(item => item.Datum+'°'+item.Behandler+'°'+item.PDFs+'-->');
-
-                                                  transfer = transfer + map;
-                                               }
-
-                                           }
-                                        }
-                                      }
+                                     var key = i;
+                                     var val = data[i];
+                                     if(key == 'Diagnostik') {
+                                       var map = val.map(item => item.Art+'°'+item.Datum+'°'+item.Behandler+'°'+item.file+'-->');
+                                     }
                                  }
-
+                             transfer = transfer + map;
                           })
                 } else if(arrv[0].endsWith('pat')) {
 
@@ -292,10 +310,10 @@ async function read_write_Comments (collection) {
                                          if(key == 'KalenderBlatt') {
                                            var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
 
-                                           transfer = transfer + map;
                                          }
                                     }
 
+                                 transfer = transfer + map;
                              })
                              .catch(err=>console.log('insert failed: '+err))
 
