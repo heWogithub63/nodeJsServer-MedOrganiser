@@ -7,15 +7,16 @@ const port =  process.env.PORT || 3030;
 const { MongoClient, GridFSBucket } = require('mongodb');
 const fs = require('fs');
 
-var client;
+const uri = "mongodb+srv://wh:admin01@cluster0.kmwrpfb.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
 var collection_1;
 var collection_2;
 
 var obj;
 var arrk,arrv;
 var resend;
-var commentsCount = 0;
-var complainsCount = 0;
+var fileIncluded = false;
 
 // We are using our packages here
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -24,40 +25,57 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
  extended: true}));
 app.use(cors());
 
-//Route that handles medOrganiser logic
-app.post('/MedOrganiser', (req, res) =>{
-	const data = req.body;
-    resend = res;
-    obj = data;
-    arrk = Object.keys(data);
-    arrv = Object.values(data);
-
-    //console.log("-->"+JSON.stringify(obj));
-	requestPost().catch(console.error);
-})
-
 //Start your server on a specified port
 app.listen(port, ()=>{
     console.log(`Server is runing on port ${port}`)
 })
 
+//Route that handles medOrganiser logic
+app.post('/MedOrganiser',async (req, res) =>{
 
-async function requestPost() {
-	const uri = "mongodb+srv://wh:admin01@cluster0.kmwrpfb.mongodb.net/?retryWrites=true&w=majority";
-        client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-        const collection = client.db("MedOrganiser").collection(arrv[1]);
+    const data = req.body;
+    console.log("-->"+data.file );
+
+    if(data != null) {
+        resend = res;
+
+        obj = data;
+        arrk = Object.keys(data);
+        arrv = Object.values(data);
+
+        if(data.file != null)
+           fileIncluded = true;
+        console.log("-->"+JSON.stringify(obj));
+	    requestPostString().catch(console.error);
+	}
+
+})
+
+
+
+
+async function requestPostString() {
+        const database = client.db("MedOrganiser");
+        const collection = database.collection(arrv[1]);
         collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
         collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
+
         try {
                 await client.connect((err) => {
-		  if (err) {
-		    console.log('Connection to server wasnt successfull');
-		  } else {
-		    console.log('Connected successfully to server');
+		                if (err) {
+		                  console.log("connection established not successfully");
+		                } else {
+		                  console.log("connection established successfully");
 
-                    read_write_Comments (collection)
-		  }
-		})
+                                  if(fileIncluded == true && arrv == 'Request-patDiagnostik')
+                                     downloadFile(obj.VersicherungsNummer, obj.file, database)
+                                  else if(fileIncluded == true && arrv[0] == 'Deploy-patDiagnostik')
+                                     uploadFile(obj.VersicherungsNummer, obj.file, database)
+
+                                  read_write_Comments (collection);
+
+		                }
+		        })
                     
         } catch (e) {
 		   console.error(e);
@@ -66,39 +84,55 @@ async function requestPost() {
                         await client.close();
                    } catch (e) {}
         }
-        
-                   
+
 }
 
-async function uploadFile(path) {
-    const db = client.db("MedOrganiser");
-    const bucket = new GridFSBucket(db, {
-                           bucketName: 'DiagnosticPdfFiles',
-                           [arrk[2]]: arrv[2]
-                   });
+async function uploadFile(patient, path, db) {
 
-    // Read the file stream and upload
-    fs.createReadStream(path).pipe(bucket.openUploadStream(path.split('/').pop()))
-        .on('error', function(error) {
-            console.log('Error:', error);
-        })
-        .on('finish', function() {
-            console.log('File uploaded successfully.');
-        });
+        const fileName = patient+"_"+path.split('/').pop();
+
+        const bucket = new GridFSBucket(db, {
+                                   bucketName: 'Diagnostik'
+                           });
+
+            // Read the file stream and upload
+            await fs.createReadStream(path).pipe(bucket.openUploadStream(fileName))
+                .on('error', function(error) {
+                    console.log('Error:', error);
+                })
+                .on('finish', function() {
+                    console.log('File uploaded successfully.');
+                    return true;
+                });
 }
 
-async function downloadFile(objId,path) {
-    const db = client.db("MedOrganiser");
-    const bucket = new GridFSBucket(db);
 
-    // Read the file stream and upload
-    fs.createReadStream(objId).pipe(bucket.openDownloadStream(path))
-        .on('error', function(error) {
-            console.log('Error:', error);
-        })
-        .on('finish', function() {
-            console.log('File downloaded successfully.');
-        });
+async function downloadFile(patient,path,db) {
+        const collection_3 = db.collection('Diagnostik.files')
+        const fileName = patient+"_"+path.split('/').pop();
+
+        const documentPdf = await collection_3.findOne({
+              filename: fileName
+            });
+
+            const documentId = documentPdf._id;
+
+            const bucket = new GridFSBucket(db, {
+                                                   bucketName: 'Diagnostik'
+                                                });
+
+            const downloadStream = bucket.openDownloadStream(documentId);
+            const writeStream = fs.createWriteStream(path);
+
+        await downloadStream.pipe(writeStream)
+                        .on('error', function(error) {
+                                    console.log('Error:', error);
+                                })
+                        .on('finish', () => {
+                           console.log('File download successfully.');
+                           return true;
+                        });
+
 }
 
 function getRandomInt(min, max) {
@@ -269,8 +303,10 @@ async function read_write_Comments (collection) {
                                  for(var i in data){
                                      var key = i;
                                      var val = data[i];
+
                                      if(key == 'Diagnostik') {
                                        var map = val.map(item => item.Art+'°'+item.Datum+'°'+item.Behandler+'°'+item.file+'-->');
+
                                      }
                                  }
                              transfer = transfer + map;
