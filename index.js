@@ -13,6 +13,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 var collection_1;
 var collection_2;
 
+var database = client.db("MedOrganiser");
 var obj;
 var arrk,arrv;
 var resend;
@@ -34,7 +35,6 @@ app.listen(port, ()=>{
 app.post('/MedOrganiser',async (req, res) =>{
 
     const data = req.body;
-    console.log("-->"+data.file );
 
     if(data != null) {
         resend = res;
@@ -43,8 +43,6 @@ app.post('/MedOrganiser',async (req, res) =>{
         arrk = Object.keys(data);
         arrv = Object.values(data);
 
-        if(data.file != null)
-           fileIncluded = true;
         console.log("-->"+JSON.stringify(obj));
 	    requestPostString().catch(console.error);
 	}
@@ -55,7 +53,7 @@ app.post('/MedOrganiser',async (req, res) =>{
 
 
 async function requestPostString() {
-        const database = client.db("MedOrganiser");
+
         const collection = database.collection(arrv[1]);
         collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
         collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
@@ -67,10 +65,6 @@ async function requestPostString() {
 		                } else {
 		                  console.log("connection established successfully");
 
-                                  if(fileIncluded == true && arrv == 'Request-patDiagnostik')
-                                     downloadFile(obj.VersicherungsNummer, obj.file, database)
-                                  else if(fileIncluded == true && arrv[0] == 'Deploy-patDiagnostik')
-                                     uploadFile(obj.VersicherungsNummer, obj.file, database)
 
                                   read_write_Comments (collection);
 
@@ -305,12 +299,31 @@ async function read_write_Comments (collection) {
                                      var val = data[i];
 
                                      if(key == 'Diagnostik') {
-                                       var map = val.map(item => item.Art+'°'+item.Datum+'°'+item.Behandler+'°'+item.file+'-->');
-
+                                         var map = val.map(item => item.Art+'>>'+item.Datum+'°'+item.Behandler+'°'+item.file);
                                      }
                                  }
-                             transfer = transfer + map;
+
+                                 var arr = Array.from(map.entries());
+
+                                 for(var i=0; i<arr.length; i++) {
+
+                                     var json = JSON.stringify(arr[i]).replaceAll('"','').replace('[','').replace(']','');
+                                         json = json.substring(json.indexOf(',') +1);
+
+                                     if(json.startsWith(arrv[3]) && parseInt(json.substring(json.indexOf('>>')+2,json.indexOf('°'))) >= parseInt(arrv[4])) {
+
+                                          if(json.endsWith('.pdf'))
+                                              downloadFile(arrv[2], arrv[5]+ json.substring(json.lastIndexOf('°') +1), database);
+
+                                          transfer = transfer + json.substring(json.indexOf('>>')+2) + '-->';
+
+                                     }
+
+                                 }
                           })
+                          .catch(err=>console.log('READDIAGNOSTIK failed: '+err))
+
+
                 } else if(arrv[0].endsWith('pat')) {
 
                     await collection
