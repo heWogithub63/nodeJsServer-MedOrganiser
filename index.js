@@ -3,6 +3,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const port =  process.env.PORT || 3030;
+const path = require('path');
 
 const { MongoClient, GridFSBucket } = require('mongodb');
 const fs = require('fs');
@@ -17,7 +18,8 @@ var database = client.db("MedOrganiser");
 var obj;
 var arrk,arrv;
 var resend;
-var fileIncluded = false;
+
+
 
 // We are using our packages here
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -104,6 +106,7 @@ async function uploadFile(patient, path, db) {
 async function downloadFile(patient,path,db) {
         const collection_3 = db.collection('Diagnostik.files')
         const fileName = patient+"_"+path.split('/').pop();
+        const tmpFile = 'tmp/MedOrganiser/file.png';
 
         const documentPdf = await collection_3.findOne({
               filename: fileName
@@ -116,13 +119,27 @@ async function downloadFile(patient,path,db) {
                                                 });
 
             const downloadStream = bucket.openDownloadStream(documentId);
-            const writeStream = fs.createWriteStream(path);
+            const writeStream = fs.createWriteStream(tmpFile);
 
         await downloadStream.pipe(writeStream)
                         .on('error', function(error) {
                                     console.log('Error:', error);
                                 })
                         .on('finish', () => {
+
+                                    var options = {
+                                                    root: path.join(path),
+                                                  };
+                                    resend.sendFile(tmpFile, options, function (err) {
+                                      if (err) {
+                                        console.log(err);
+                                        return res.status(500).json({ success: false, message: "internal server error. please try again later" });
+
+                                      } else {
+                                        console.log("Sent:", tmpFile, "at", new Date().toString());
+                                      }
+                                    });
+
                            console.log('File download successfully.');
                            return true;
                         });
