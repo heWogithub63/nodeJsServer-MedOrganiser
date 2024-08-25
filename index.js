@@ -9,15 +9,16 @@ const { MongoClient, GridFSBucket } = require('mongodb');
 const fs = require('fs');
 
 const uri = "mongodb+srv://wh:admin01@cluster0.kmwrpfb.mongodb.net/?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 var collection_1;
 var collection_2;
 
-var database = client.db("MedOrganiser");
+var database;
 var obj;
 var arrk,arrv;
-var resend;
+var response;
+var resent;
+
 
 
 
@@ -33,19 +34,21 @@ app.listen(port, ()=>{
     console.log(`Server is runing on port ${port}`)
 })
 
+
 //Route that handles medOrganiser logic
 app.post('/MedOrganiser',async (req, res) =>{
 
     const data = req.body;
 
     if(data != null) {
-        resend = res;
+        response = res;
 
         obj = data;
         arrk = Object.keys(data);
         arrv = Object.values(data);
 
         console.log("-->"+JSON.stringify(obj));
+
 	    requestPostString().catch(console.error);
 	}
 
@@ -55,7 +58,8 @@ app.post('/MedOrganiser',async (req, res) =>{
 
 
 async function requestPostString() {
-
+        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+        database = client.db("MedOrganiser");
         const collection = database.collection(arrv[1]);
         collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
         collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
@@ -66,9 +70,10 @@ async function requestPostString() {
 		                  console.log("connection established not successfully");
 		                } else {
 		                  console.log("connection established successfully");
-
-
-                                  read_write_Comments (collection);
+                                  if(arrv[0] == 'FileDownload')
+                                      downloadFile(arrv[1],arrv[2],arrv[3],database);
+                                  else
+                                      read_write_Comments (collection);
 
 		                }
 		        })
@@ -103,10 +108,10 @@ async function uploadFile(patient, path, db) {
 }
 
 
-async function downloadFile(patient,path,db) {
-        const collection_3 = db.collection('Diagnostik.files')
-        const fileName = patient+"_"+path.split('/').pop();
-        const tmpFile = 'tmp/MedOrganiser/file.png';
+async function downloadFile(coll,patient,filePath, database) {
+
+        const collection_3 = database.collection(coll)
+        const fileName = patient+"_"+filePath.split('/').pop();
 
         const documentPdf = await collection_3.findOne({
               filename: fileName
@@ -114,34 +119,24 @@ async function downloadFile(patient,path,db) {
 
             const documentId = documentPdf._id;
 
-            const bucket = new GridFSBucket(db, {
+            const bucket = new GridFSBucket(database, {
                                                    bucketName: 'Diagnostik'
                                                 });
 
-            const downloadStream = bucket.openDownloadStream(documentId);
-            const writeStream = fs.createWriteStream(tmpFile);
 
-        await downloadStream.pipe(writeStream)
+            const downloadStream = bucket.openDownloadStream(documentId);
+
+            var mimetype = 'application/pdf';
+            response.setHeader('Content-type', mimetype);
+
+
+        await downloadStream.pipe( response )
                         .on('error', function(error) {
                                     console.log('Error:', error);
                                 })
                         .on('finish', () => {
-
-                                    var options = {
-                                                    root: path.join(path),
-                                                  };
-                                    resend.sendFile(tmpFile, options, function (err) {
-                                      if (err) {
-                                        console.log(err);
-                                        return res.status(500).json({ success: false, message: "internal server error. please try again later" });
-
-                                      } else {
-                                        console.log("Sent:", tmpFile, "at", new Date().toString());
-                                      }
-                                    });
-
                            console.log('File download successfully.');
-                           return true;
+
                         });
 
 }
@@ -272,10 +267,10 @@ async function read_write_Comments (collection) {
                }
 
                transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
-               resend.status(200).json({body: JSON.stringify(transfer)});
+               response.status(200).json({body: JSON.stringify(transfer)});
 
            } catch (error) {
-                   resend.status(400).json({ error: error });
+                   response.status(400).json({ error: error });
            }
       }
 
@@ -328,12 +323,8 @@ async function read_write_Comments (collection) {
                                          json = json.substring(json.indexOf(',') +1);
 
                                      if(json.startsWith(arrv[3]) && parseInt(json.substring(json.indexOf('>>')+2,json.indexOf('°'))) >= parseInt(arrv[4])) {
-
-                                          if(json.endsWith('.pdf'))
-                                              downloadFile(arrv[2], arrv[5]+ json.substring(json.lastIndexOf('°') +1), database);
-
                                           transfer = transfer + json.substring(json.indexOf('>>')+2) + '-->';
-
+                                          console.dir(transfer);
                                      }
 
                                  }
@@ -394,10 +385,10 @@ async function read_write_Comments (collection) {
                 }
 
 
-                resend.status(200).json({body: JSON.stringify(transfer.substring(0,transfer.length -3))});
+                response.status(200).json({body: JSON.stringify(transfer.substring(0,transfer.length -3))});
 
             } catch (error) {
-                    resend.status(400).json({ error: error });
+                    response.status(400).json({ error: error });
             }
       }
 }
