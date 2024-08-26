@@ -108,10 +108,10 @@ async function uploadFile(patient, path, db) {
 }
 
 
-async function downloadFile(coll,patient,filePath, database) {
+async function downloadFile(coll,patient,file, database) {
 
         const collection_3 = database.collection(coll)
-        const fileName = patient+"_"+filePath.split('/').pop();
+        const fileName = patient+"_"+file;
 
         const documentPdf = await collection_3.findOne({
               filename: fileName
@@ -123,20 +123,21 @@ async function downloadFile(coll,patient,filePath, database) {
                                                    bucketName: 'Diagnostik'
                                                 });
 
-
             const downloadStream = bucket.openDownloadStream(documentId);
-
-            var mimetype = 'application/pdf';
-            response.setHeader('Content-type', mimetype);
-
+            //const writeStream = fs.createWriteStream(file);
+            response.writeHead(200, {
+                'Content-Type': 'application/pdf',
+                'Response-Type': 'arraybuffer',
+                'Content-Disposition': 'attachment',
+                'Filename' : file
+                });
 
         await downloadStream.pipe( response )
                         .on('error', function(error) {
                                     console.log('Error:', error);
                                 })
                         .on('finish', () => {
-                           console.log('File download successfully.');
-
+                            console.log('File download successfully.'); 
                         });
 
 }
