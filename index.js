@@ -47,7 +47,7 @@ app.post('/MedOrganiser',async (req, res) =>{
         arrk = Object.keys(data);
         arrv = Object.values(data);
 
-        console.log("-->"+JSON.stringify(obj));
+        //console.log("-->"+JSON.stringify(obj));
 
 	    requestPostString().catch(console.error);
 	}
@@ -170,7 +170,7 @@ async function read_write_Comments (collection) {
                                 .findOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}},
                                                   {[arrk[7]]: arrv[7]}]})
 
-                                .then(data=> { console.dir("first--"+data);
+                                .then(data=> {
                                 	          if(data != null)
                                 	               transfer = 'Ein Patient mit den eingegebenen Daten >>'+arrv[6]+' >> '+arrv[7]+' ist bereits existent';
                                 	          else next = true;
@@ -184,7 +184,7 @@ async function read_write_Comments (collection) {
 
                                 await collection
                                             .findOne({VersicherungsNummer: VersNr})
-                                            .then(data=> { console.dir("second--"+data);
+                                            .then(data=> {
                                                           if(data == null) {
                                                               obj.VersicherungsNummer = VersNr;
                                                               next = true;
@@ -203,7 +203,7 @@ async function read_write_Comments (collection) {
 
                                    await collection_1
                                             .findOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}}]})
-                                            .then(data=> {console.dir("third--"+data);
+                                            .then(data=> {
                                                           if(data != null) {
                                                              isPersonal = 'Arzt'
                                                              next = true;
@@ -218,7 +218,7 @@ async function read_write_Comments (collection) {
                        }
 
                        if(next && isPersonal == 'Arzt') {
-                          console.dir("fourth--"+isPersonal+"----VersNr");
+
                           await collection_1
                                    .updateOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}}]}
                                                                                , {$set: {VersicherungsNummer: VersNr}});
@@ -232,10 +232,49 @@ async function read_write_Comments (collection) {
                                next = false;
                                await collection
                                         .insertOne(obj)
-                                        .then(data=> { console.dir("fifth--"+data);
+                                        .then(data=> {
                                                        transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr;})
                                         .catch(err=>console.log('insert failed: '+err));
                        }
+
+               } else if(arrv[0].endsWith('dataChanged')) {
+                       var AktivStatus = '';
+
+                       if("AktivStatus" in obj) {
+                            AktivStatus = obj.AktivStatus;
+
+                                 if(AktivStatus != 'Patient') {
+                                      if (AktivStatus == 'Medizinisches Personal') {
+
+                                           next = false;
+
+                                           await collection_1
+                                                    .findOne({$and: [{[arrk[3]]: {$regex: arrv[3].substring(0,arrv[3].indexOf(' '))}}, {[arrk[3]]: {$regex: arrv[3].substring(arrv[3].indexOf(' ')+1)}}]})
+                                                    .then(data=> {
+                                                                  if(data != null) {
+                                                                     isPersonal = 'Arzt'
+                                                                     next = true;
+                                                                  } else {
+                                                                      obj.AktivStatus = 'Patient';
+                                                                      next = true;
+                                                                  }
+                                                             });
+                                      } else
+                                         obj.AktivStatus = 'Patient';
+                                 }
+                       }
+
+                       delete obj.Caller;
+                       delete obj.Collection;
+                       delete obj.VersicherungsNummer;
+                       delete obj.Name;
+
+                      
+                       await collection
+                               .updateOne( {[arrk[2]]: arrv[2]}, {$set: obj})
+                               .catch(err=>console.log('datChanged failed: '+err));
+
+                       transfer = 'dataChanged successfull';
 
                } else if(arrv[0].endsWith('kldataSave')) {
 
@@ -281,26 +320,31 @@ async function read_write_Comments (collection) {
 
             try {
                 if(arrv[0].endsWith('patDaten')) {
+                    var isMed = false;
                     await collection
-                          .find({VersicherungsNummer: arrv[2]})
-                          .forEach(function(obj){
+                          .find({[arrk[2]]: arrv[2]})
+                          .forEach(function(obj) {
                                     if(obj != null) {
 
                                         Object.keys(obj).forEach((k, i) => {
-                                            if (!k.includes('Datum') && !k.includes('_id') && !k.includes('Medikamente')) {
+                                            if (!k.includes('Datum') && !k.includes('_id') && !k.includes('Medikamente') && isMed == false) {
                                                 transfer = transfer +k+"---"+obj[k]+'°';
                                             } else if(k.includes('Medikamente')) {
                                                      transfer = transfer +k+'^';
                                                      Object.keys(obj[k]).forEach((j, l) => {
                                                            transfer = transfer+ JSON.stringify(obj[k][j]) +'^';
                                                       });
-                                                     transfer = transfer+'°';
+                                                     transfer = transfer;
+                                                     isMed = true;
                                             }
                                         });
 
                                         transfer =  transfer+ '-->';
                                     }
                           })
+
+                          .catch(err=>console.log('patData failed: '+err));
+
 
                 } else if(arrv[0].endsWith('patDiagnostik')) {
 
