@@ -269,7 +269,7 @@ async function read_write_Comments (collection) {
                        delete obj.VersicherungsNummer;
                        delete obj.Name;
 
-                      
+
                        await collection
                                .updateOne( {[arrk[2]]: arrv[2]}, {$set: obj})
                                .catch(err=>console.log('datChanged failed: '+err));
@@ -369,7 +369,7 @@ async function read_write_Comments (collection) {
 
                                      if(json.startsWith(arrv[3]) && parseInt(json.substring(json.indexOf('>>')+2,json.indexOf('°'))) >= parseInt(arrv[4])) {
                                           transfer = transfer + json.substring(json.indexOf('>>')+2) + '-->';
-                                          console.dir(transfer);
+
                                      }
 
                                  }
@@ -409,6 +409,8 @@ async function read_write_Comments (collection) {
                                     for(var i in data){
                                          var key = i;
                                          var val = data[i];
+                                         if(key == 'Name')
+                                            transfer = transfer + val + '-->';
                                          if(key == 'KalenderBlatt') {
                                            var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
 
