@@ -327,15 +327,16 @@ async function read_write_Comments (collection) {
                                     if(obj != null) {
 
                                         Object.keys(obj).forEach((k, i) => {
-                                            if (!k.includes('Datum') && !k.includes('_id') && !k.includes('Medikamente') && isMed == false) {
-                                                transfer = transfer +k+"---"+obj[k]+'°';
-                                            } else if(k.includes('Medikamente')) {
+
+                                            if(k.includes('Medikamente') || k.includes('Diagnostik') || k.includes('Konsultationen')) {
                                                      transfer = transfer +k+'^';
                                                      Object.keys(obj[k]).forEach((j, l) => {
                                                            transfer = transfer+ JSON.stringify(obj[k][j]) +'^';
                                                       });
                                                      transfer = transfer;
                                                      isMed = true;
+                                            } else if (!k.includes('Datum') && !k.includes('_id')) {
+                                                         transfer = transfer +k+"---"+obj[k]+'°';
                                             }
                                         });
 
