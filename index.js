@@ -320,7 +320,7 @@ async function read_write_Comments (collection) {
 
             try {
                 if(arrv[0].endsWith('patDaten')) {
-                    var isMed = false;
+
                     await collection
                           .find({[arrk[2]]: arrv[2]})
                           .forEach(function(obj) {
@@ -329,12 +329,11 @@ async function read_write_Comments (collection) {
                                         Object.keys(obj).forEach((k, i) => {
 
                                             if(k.includes('Medikamente') || k.includes('Diagnostik') || k.includes('Konsultationen')) {
-                                                     transfer = transfer +k+'^';
+                                                     transfer = transfer.substring(0,transfer.length -1) +'-->'+k+'---';
                                                      Object.keys(obj[k]).forEach((j, l) => {
                                                            transfer = transfer+ JSON.stringify(obj[k][j]) +'^';
                                                       });
-                                                     transfer = transfer;
-                                                     isMed = true;
+                                                transfer = transfer +'°';
                                             } else if (!k.includes('Datum') && !k.includes('_id')) {
                                                          transfer = transfer +k+"---"+obj[k]+'°';
                                             }
