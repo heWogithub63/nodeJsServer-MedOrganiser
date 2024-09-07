@@ -280,30 +280,26 @@ async function read_write_Comments (collection) {
 
                    if(arrv[2].startsWith('create>>')) {
                        arrv[2] = arrv[2].substring(8);
-
                        await collection
+                                .updateOne({ [arrk[2]]: arrv[2] }, { $push:{Konsultationen: {[arrk[4]] : arrv[4], [arrk[7]] : arrv[7], [arrk[6]] : arrv[6], [arrk[8]] : arrv[8], [arrk[9]] : arrv[9] }} })
+                                .catch(err=>console.log('delete failed: '+err))
+
+                       await collection_2
                                 .updateOne({ Name: arrv[2] }, { $push:{[arrk[3]] : { [arrk[4]]: arrv[4], [arrk[5]]: arrv[5], [arrk[6]]: arrv[6], [arrk[7]]: parseInt(arrv[7]) }} })
                                 .catch(err=>console.log('insert failed: '+err))
 
                    } else if(arrv[2].startsWith('delete>>')) {
                               arrv[2] = arrv[2].substring(8);
-
                               await collection
+                                     .updateOne({ [arrk[2]]: arrv[2] }, { $pull:{Konsultationen: {[arrk[4]] : arrv[4], [arrk[7]] : arrv[7], [arrk[6]] : arrv[6], [arrk[8]] : arrv[8], [arrk[9]] : arrv[9] }} })
+                                     .catch(err=>console.log('delete failed: '+err))
+
+                              await collection_2
                                        .updateOne({ Name: arrv[2] }, { $pull:{[arrk[3]] : { [arrk[4]]: arrv[4], [arrk[5]]: arrv[5], [arrk[6]]: arrv[6], [arrk[7]]: parseInt(arrv[7]) }} })
                                        .catch(err=>console.log('delete failed: '+err))
                    }
                    transfer = 'successfull';
 
-               } else if(arrv[0].endsWith('dataSave')) {
-
-                         await collection
-                                .updateOne({ [arrk[2]]: arrv[2] }, { $pull:{Konsultationen: {[arrk[3]] : arrv[3], [arrk[4]] : arrv[4], [arrk[5]] : arrv[5], [arrk[6]] : arrv[6] }} })
-                                .catch(err=>console.log('delete failed: '+err))
-
-                         await collection
-                                .updateOne({ [arrk[2]]: arrv[2] }, { $push:{Konsultationen: {[arrk[3]] : arrv[3], [arrk[4]] : arrv[4], [arrk[5]] : arrv[5], [arrk[6]] : arrv[6] }} })
-                                .catch(err=>console.log('insert failed: '+err))
-                         transfer = 'successfull';
                }
 
                transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
