@@ -330,7 +330,7 @@ async function read_write_Comments (collection) {
                                                            transfer = transfer+ JSON.stringify(obj[k][j]) +'^';
                                                       });
                                                 transfer = transfer +'°';
-                                            } else if (!k.includes('Datum') && !k.includes('_id')) {
+                                            } else if (!k.includes('gsDatum') && !k.includes('_id')) {
                                                          transfer = transfer +k+"---"+obj[k]+'°';
                                             }
                                         });
