@@ -316,7 +316,7 @@ async function read_write_Comments (collection) {
 
             try {
                 if(arrv[0].endsWith('patDaten')) {
-
+                    var n = 0; 
                     await collection
                           .find({[arrk[2]]: arrv[2]})
                           .forEach(function(obj) {
@@ -324,18 +324,21 @@ async function read_write_Comments (collection) {
 
                                         Object.keys(obj).forEach((k, i) => {
 
-                                            if(k.includes('Medikamente') || k.includes('Diagnostik') || k.includes('Konsultationen')) {
+                                            if (n > 2  && n < 15) {
+                                                 transfer = transfer +k+"---"+obj[k]+'°';
+                                            }
+                                            else if(n >= 15)  {
+
                                                      transfer = transfer.substring(0,transfer.length -1) +'-->'+k+'---';
                                                      Object.keys(obj[k]).forEach((j, l) => {
                                                            transfer = transfer+ JSON.stringify(obj[k][j]) +'^';
                                                       });
                                                 transfer = transfer +'°';
-                                            } else if (!k.includes('gsDatum') && !k.includes('_id')) {
-                                                         transfer = transfer +k+"---"+obj[k]+'°';
-                                            }
+                                            }  
+                                            n++;
                                         });
 
-                                        transfer =  transfer+ '-->';
+                                        //transfer =  transfer+ '-->';
                                     }
                           })
 
