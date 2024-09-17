@@ -276,7 +276,25 @@ async function read_write_Comments (collection) {
 
                        transfer = 'dataChanged successfull';
 
+               } else if(arrv[0].endsWith('persEintrag')) {
+                       delete obj.Caller;
+                       delete obj.Collection;
+                                 await collection
+                                        .insertOne(obj)
+                                        .then(data=> {
+                                                       transfer = 'Erfolgreicher Eintrag der PedrsonalDaten: '})
+                                        .catch(err=>console.log('insert failed: '+err));
+
+               } else if(arrv[0].endsWith('persDelete')) {
+                         var st = arrv[2] + '.$';
+                                await collection
+                                       .updateOne({[arrv[2]]: {[arrk[3]]: arrv[3]}, [arrv[2]]: {[arrk[4]]: arrv[4]}}, {$unset: { [st] : 1}})
+                                       .then(data=> {
+                                                      transfer = 'Erfolgreich Eintrag der PedrsonalDaten gelöscht: '})
+                                       .catch(err=>console.log('delete failed: '+err));
                } else if(arrv[0].endsWith('kldataSave')) {
+
+
 
                    if(arrv[2].startsWith('create>>')) {
                        arrv[2] = arrv[2].substring(8);
