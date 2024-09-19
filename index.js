@@ -10,6 +10,7 @@ const fs = require('fs');
 
 const uri = "mongodb+srv://wh:admin01@cluster0.kmwrpfb.mongodb.net/?retryWrites=true&w=majority";
 
+var collection_0;
 var collection_1;
 var collection_2;
 
@@ -61,6 +62,7 @@ async function requestPostString() {
         const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
         database = client.db("MedOrganiser");
         const collection = database.collection(arrv[1]);
+        collection_0 = client.db("MedOrganiser").collection('Patient');
         collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
         collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
 
@@ -197,7 +199,7 @@ async function read_write_Comments (collection) {
                            var AktivStatus = arrv[12];
 
                            if(AktivStatus != 'Patient') {
-                              if (AktivStatus == 'Medizinisches Personal') {
+                              if (AktivStatus.startsWith('MedizinischesPersonal')) {
 
                                    next = false;
 
@@ -206,6 +208,7 @@ async function read_write_Comments (collection) {
                                             .then(data=> {
                                                           if(data != null) {
                                                              isPersonal = 'Arzt'
+                                                             obj.AktivStatus = obj.AktivStatus +' Typ I'
                                                              next = true;
                                                           } else {
                                                               obj.AktivStatus = 'Patient';
@@ -233,7 +236,7 @@ async function read_write_Comments (collection) {
                                await collection
                                         .insertOne(obj)
                                         .then(data=> {
-                                                       transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr;})
+                                                       transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr +'-->'+obj.AktivStatus})
                                         .catch(err=>console.log('insert failed: '+err));
                        }
 
@@ -244,7 +247,7 @@ async function read_write_Comments (collection) {
                             AktivStatus = obj.AktivStatus;
 
                                  if(AktivStatus != 'Patient') {
-                                      if (AktivStatus == 'Medizinisches Personal') {
+                                      if (AktivStatus.startsWith('MedizinischesPersonal')) {
 
                                            next = false;
 
@@ -279,19 +282,45 @@ async function read_write_Comments (collection) {
                } else if(arrv[0].endsWith('persEintrag')) {
                        delete obj.Caller;
                        delete obj.Collection;
+                       var success = false;
                                  await collection
                                         .insertOne(obj)
-                                        .then(data=> {
-                                                       transfer = 'Erfolgreicher Eintrag der PedrsonalDaten: '})
+                                        .then(data=> { success = true;
+                                                     })
                                         .catch(err=>console.log('insert failed: '+err));
+                       if(success) {
+                          var str = JSON.stringify(arrv[2].map(function(item) {return [item.Name, item.Geburtsdatum, item.Typ].join('---');})).replace('[','').replace(']','').replaceAll('"','');
+                          var name = str.substring(0,str.indexOf('---'));
+                          var gebdatum =  str.substring(str.indexOf('---') +3, str.lastIndexOf('---'));
+                          var typ = str.substring(str.lastIndexOf('---')+3);
+
+                                await collection_0
+                                       .updateOne({ $and: [ {Name: name }, { Geburtsdatum: gebdatum } ] },{ $set: {AktivStatus: arrk[2] + ' Typ ' +typ}})
+                                       .then(data=> { 
+                                                      transfer = 'Erfolgreicher Eintrag der PedrsonalDaten: '})
+                                       .catch(err=>console.log('insert failed: '+err));
+                       }
 
                } else if(arrv[0].endsWith('persDelete')) {
                          var st = arrv[2] + '.$';
+                         var s1 = arrv[2] +'.'+arrk[3];
+                         var s2 = arrv[2] +'.'+arrk[4];
+                         var success = false;
+
                                 await collection
-                                       .updateOne({[arrv[2]]: {[arrk[3]]: arrv[3]}, [arrv[2]]: {[arrk[4]]: arrv[4]}}, {$unset: { [st] : 1}})
-                                       .then(data=> {
-                                                      transfer = 'Erfolgreich Eintrag der PedrsonalDaten gelöscht: '})
+                                       .updateOne({[s1]: arrv[3], [s2]: arrv[4]}, {$unset: {[st]: 1}})
+                                       .then(data=> { success = true;
+                                                    })
                                        .catch(err=>console.log('delete failed: '+err));
+
+                         if(success) {
+                                  await collection_0
+                                         .updateOne({ $and: [ { [arrk[3]]: arrv[3] }, { [arrk[4]]: arrv[4] } ] },{ $set: {AktivStatus: 'Patient'}})
+                                         .then(data=> {
+                                                        transfer = 'Erfolgreicher Eintrag der PedrsonalDaten: '})
+                                         .catch(err=>console.log('insert failed: '+err));
+                         }
+
                } else if(arrv[0].endsWith('kldataSave')) {
 
 
@@ -446,6 +475,34 @@ async function read_write_Comments (collection) {
 
                                               transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
                                      })
+                } else if(arrv[0].endsWith('persSearch')) {
+                         var transfer = '';
+                         var st = '';
+                         var str = arrv[2] + '.' +arrk[3];
+                             await collection
+                                     .find({ [str]: arrv[3] })
+                                     .forEach(function(data){
+                                            for(var i in data){
+                                                var key = i;
+                                                var val = data[i];
+
+                                                if(key == arrv[2]) {
+                                                   st = JSON.stringify(val.map(function(item) {return [item.Autorisiert, item.Name, item.Geburtsdatum, item.Typ].join('°');})).replace('[','').replace(']','').replaceAll('"','');
+                                                }
+                                            }
+
+                                     })
+                                     .then(res => {
+                                            var ges = st.split(',');
+
+                                            for(var i=0;i<ges.length;i++)
+                                                if(ges[i].includes(arrv[3])) {
+                                                   transfer = transfer + ges[i] + '-->';
+                                                }
+
+                                     })
+
+
                 }
 
 
