@@ -282,12 +282,31 @@ async function read_write_Comments (collection) {
                } else if(arrv[0].endsWith('persEintrag')) {
                        delete obj.Caller;
                        delete obj.Collection;
+
                        var success = false;
+                       var s1 = obj[arrk[2]];
+
+                       for(var i=0;i<s1.length;i++) {
+                           var s2 = s1[i];
+
+                              if(!success) {
                                  await collection
-                                        .insertOne(obj)
-                                        .then(data=> { success = true;
-                                                     })
-                                        .catch(err=>console.log('insert failed: '+err));
+                                     .updateOne( {}, {$push: {[arrk[2]]: s2}}, {upsert:true})
+                                     .then(data=> {
+                                                    if(JSON.stringify(data.matchedCount) == '0') {
+                                                       success = true;
+                                                       collection
+                                                               .insertOne(obj)
+                                                               .then(data=> {transfer = 'Erfolgreicher Erst-Eintrag der PedrsonalDaten'; })
+                                                    } else if(i == s1.length -1) {
+                                                              success = true;
+                                                              transfer = 'Erfolgreiche Addition der PedrsonalDaten';
+                                                    }
+                                                  })
+                                     .catch(err=>console.log('insert failed: '+err));
+
+                              }
+                       }
                        if(success) {
                           var str = JSON.stringify(arrv[2].map(function(item) {return [item.Name, item.Geburtsdatum, item.Typ].join('---');})).replace('[','').replace(']','').replaceAll('"','');
                           var name = str.substring(0,str.indexOf('---'));
@@ -297,7 +316,7 @@ async function read_write_Comments (collection) {
                                 await collection_0
                                        .updateOne({ $and: [ {Name: name }, { Geburtsdatum: gebdatum } ] },{ $set: {AktivStatus: arrk[2] + ' Typ ' +typ}})
                                        .then(data=> { 
-                                                      transfer = 'Erfolgreicher Eintrag der PedrsonalDaten: '})
+                                                      transfer = 'Erfolgreicher Eintrag in die PatientenDaten '})
                                        .catch(err=>console.log('insert failed: '+err));
                        }
 
@@ -479,6 +498,7 @@ async function read_write_Comments (collection) {
                          var transfer = '';
                          var st = '';
                          var str = arrv[2] + '.' +arrk[3];
+
                              await collection
                                      .find({ [str]: arrv[3] })
                                      .forEach(function(data){
