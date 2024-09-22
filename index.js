@@ -279,7 +279,7 @@ async function read_write_Comments (collection) {
 
                        transfer = 'dataChanged successfull';
 
-               } else if(arrv[0].endsWith('persEintrag')) {
+               } else if(arrv[0].includes('-pers')) {
                        delete obj.Caller;
                        delete obj.Collection;
 
@@ -290,21 +290,34 @@ async function read_write_Comments (collection) {
                            var s2 = s1[i];
 
                               if(!success) {
-                                 await collection
-                                     .updateOne( {}, {$push: {[arrk[2]]: s2}}, {upsert:true})
-                                     .then(data=> {
-                                                    if(JSON.stringify(data.matchedCount) == '0') {
-                                                       success = true;
-                                                       collection
-                                                               .insertOne(obj)
-                                                               .then(data=> {transfer = 'Erfolgreicher Erst-Eintrag der PedrsonalDaten'; })
-                                                    } else if(i == s1.length -1) {
-                                                              success = true;
-                                                              transfer = 'Erfolgreiche Addition der PedrsonalDaten';
-                                                    }
-                                                  })
-                                     .catch(err=>console.log('insert failed: '+err));
+                                 if(arrv[0].endsWith('Eintrag')) {
+                                    await collection
+                                       .updateOne( {}, {$push: {[arrk[2]]: s2}}, {upsert:true})
+                                       .then(data=> {
+                                                      if(JSON.stringify(data.modifiedCount) == '0') {
+                                                         success = true;
+                                                         collection
+                                                                 .insertOne(obj)
+                                                                 .then(data=> {transfer = 'Erfolgreicher Erst-Eintrag der PedrsonalDaten'; })
+                                                      } else if(i == s1.length -1) {
+                                                                success = true;
+                                                                transfer = 'Erfolgreiche Addition der PedrsonalDaten';
+                                                      }
+                                                    })
+                                       .catch(err=>console.log('insert failed: '+err));
+                                 } else if(arrv[0].endsWith('Delete')) {
+                                    delete s2.Datum;
 
+                                    await collection
+                                       .updateOne( {}, {$pull: {[arrk[2]]: s2}}, {upsert:true})
+                                       .then(data=> {
+                                              if(JSON.stringify(data.modifiedCount) == '1') {
+                                                  success = true;
+                                                  transfer = 'Erfolgreicher Delete der PedrsonalDaten';
+                                              }
+                                       })
+                                        .catch(err=>console.log('delete failed: '+err));
+                                 }
                               }
                        }
                        if(success) {
@@ -312,33 +325,20 @@ async function read_write_Comments (collection) {
                           var name = str.substring(0,str.indexOf('---'));
                           var gebdatum =  str.substring(str.indexOf('---') +3, str.lastIndexOf('---'));
                           var typ = str.substring(str.lastIndexOf('---')+3);
-
+                             if(arrv[0].endsWith('Eintrag')) {
                                 await collection_0
                                        .updateOne({ $and: [ {Name: name }, { Geburtsdatum: gebdatum } ] },{ $set: {AktivStatus: arrk[2] + ' Typ ' +typ}})
                                        .then(data=> { 
                                                       transfer = 'Erfolgreicher Eintrag in die PatientenDaten '})
                                        .catch(err=>console.log('insert failed: '+err));
-                       }
-
-               } else if(arrv[0].endsWith('persDelete')) {
-                         var st = arrv[2] + '.$';
-                         var s1 = arrv[2] +'.'+arrk[3];
-                         var s2 = arrv[2] +'.'+arrk[4];
-                         var success = false;
-
-                                await collection
-                                       .updateOne({[s1]: arrv[3], [s2]: arrv[4]}, {$unset: {[st]: 1}})
-                                       .then(data=> { success = true;
-                                                    })
+                             } else   if(arrv[0].endsWith('Delete')) {
+                                await collection_0
+                                       .updateOne({ $and: [ {Name: name }, { Geburtsdatum: gebdatum } ] },{ $unset: {AktivStatus: arrk[2] + ' Typ ' +typ}})
+                                       .then(data=> {
+                                                      transfer = 'Erfolgreicher Delete in den PatientenDaten '})
                                        .catch(err=>console.log('delete failed: '+err));
-
-                         if(success) {
-                                  await collection_0
-                                         .updateOne({ $and: [ { [arrk[3]]: arrv[3] }, { [arrk[4]]: arrv[4] } ] },{ $set: {AktivStatus: 'Patient'}})
-                                         .then(data=> {
-                                                        transfer = 'Erfolgreicher Eintrag der PedrsonalDaten: '})
-                                         .catch(err=>console.log('insert failed: '+err));
-                         }
+                             }
+                       }
 
                } else if(arrv[0].endsWith('kldataSave')) {
 
