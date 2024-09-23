@@ -48,7 +48,7 @@ app.post('/MedOrganiser',async (req, res) =>{
         arrk = Object.keys(data);
         arrv = Object.values(data);
 
-        console.log("-->"+JSON.stringify(obj));
+        //console.log("-->"+JSON.stringify(obj));
 
 	    requestPostString().catch(console.error);
 	}
