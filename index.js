@@ -532,6 +532,7 @@ async function read_write_Comments (collection) {
 
                                      })
                                      .then(res => {
+
                                             var ges = st.split(',');
 
                                             for(var i=0;i<ges.length;i++)
@@ -545,7 +546,7 @@ async function read_write_Comments (collection) {
                 }
 
 
-                response.status(200).json({body: JSON.stringify(transfer.substring(0,transfer.length -3))});
+                response.status(200).json({body: JSON.stringify(transfer)});
 
             } catch (error) {
                     response.status(400).json({ error: error });
