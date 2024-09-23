@@ -48,7 +48,7 @@ app.post('/MedOrganiser',async (req, res) =>{
         arrk = Object.keys(data);
         arrv = Object.values(data);
 
-        //console.log("-->"+JSON.stringify(obj));
+        console.log("-->"+JSON.stringify(obj));
 
 	    requestPostString().catch(console.error);
 	}
@@ -224,7 +224,7 @@ async function read_write_Comments (collection) {
 
                           await collection_1
                                    .updateOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}}]}
-                                                                               , {$set: {VersicherungsNummer: VersNr}});
+                                                                               , {$set: {VersicherungsNummer: VersNr, LebenslangeArztNr: arrv[9]}});
 
                           await collection_2
                                    .updateOne({$and: [{[arrk[6]]: {$regex: arrv[6].substring(0,arrv[6].indexOf(' '))}}, {[arrk[6]]: {$regex: arrv[6].substring(arrv[6].indexOf(' ')+1)}}]}
@@ -413,6 +413,22 @@ async function read_write_Comments (collection) {
 
                           .catch(err=>console.log('patData failed: '+err));
 
+
+                } else if(arrv[0].endsWith('personalDaten')) {
+                    transfer = "";
+
+                    await collection
+                          .find({ [arrk[2]]: arrv[2] })
+                          .forEach(function(data){
+                                   for(var i in data){
+                                       var key = i;
+                                       var val = data[i];
+                                       if(key == 'Name' || key == 'LebenslangeArztNr')
+                                          transfer = transfer + val +'-->';
+                                   }
+
+                          })
+                          .catch(err=>console.log('personalData failed: '+err));
 
                 } else if(arrv[0].endsWith('patDiagnostik')) {
 
