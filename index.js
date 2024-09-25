@@ -423,7 +423,7 @@ async function read_write_Comments (collection) {
                                    for(var i in data){
                                        var key = i;
                                        var val = data[i];
-                                       if(key == 'Name' || key == 'LebenslangeArztNr')
+                                       if(key != '_id' && key != 'isActive' && key != 'VersicherungsNummer')
                                           transfer = transfer + val +'-->';
                                    }
 
