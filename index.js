@@ -19,6 +19,7 @@ var obj;
 var arrk,arrv;
 var response;
 var resent;
+var reqUrl;
 
 
 
@@ -35,11 +36,11 @@ app.listen(port, ()=>{
     console.log(`Server is runing on port ${port}`)
 })
 
-
 //Route that handles medOrganiser logic
 app.post('/MedOrganiser',async (req, res) =>{
 
     const data = req.body;
+    reqUrl = req.baseUrl;
 
     if(data != null) {
         response = res;
@@ -74,6 +75,8 @@ async function requestPostString() {
 		                  console.log("connection established successfully");
                                   if(arrv[0] == 'FileDownload')
                                       downloadFile(arrv[1],arrv[2],arrv[3],database);
+                                  else if(arrv[0] == 'FileUpload')
+                                      uploadFile(arrv[1],arrv[2],arrv[3],database);
                                   else
                                       read_write_Comments (collection);
 
@@ -90,22 +93,30 @@ async function requestPostString() {
 
 }
 
-async function uploadFile(patient, path, db) {
-
+async function uploadFile(coll, patient, path, db) {
+        console.log("-->"+reqUrl+path);
         const fileName = patient+"_"+path.split('/').pop();
+        const bName = arrv[1];
 
         const bucket = new GridFSBucket(db, {
-                                   bucketName: 'Diagnostik'
+                                   bucketName:  bName
                            });
 
             // Read the file stream and upload
-            await fs.createReadStream(path).pipe(bucket.openUploadStream(fileName))
+            await fs.createReadStream(reqUrl+path).pipe(bucket.openUploadStream(fileName))
                 .on('error', function(error) {
                     console.log('Error:', error);
                 })
                 .on('finish', function() {
-                    console.log('File uploaded successfully.');
-                    return true;
+                    arrv[0] = 'Deploy_dataChanged';
+                    obj = {
+                           [arrv[1]] : [{[arrk[4]] : arrv[4],
+                                        [arrk[5]] : parseInt(arrv[5]),
+                                        [arrk[6]] : arrv[6],
+                                        [arrk[7]] : arrv[7]
+                                       }]
+                    }
+                    read_write_Comments (collection_0);
                 });
 }
 
@@ -120,9 +131,10 @@ async function downloadFile(coll,patient,file, database) {
             });
 
             const documentId = documentPdf._id;
+            const bName = arrv[1].substring(0,arrv[1].lastIndexOf('.'));
 
             const bucket = new GridFSBucket(database, {
-                                                   bucketName: 'Diagnostik'
+                                                   bucketName: bName
                                                 });
 
             const downloadStream = bucket.openDownloadStream(documentId);
