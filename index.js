@@ -1,9 +1,10 @@
+
 const express = require('express')
 const app = express()
+const { Readable } = require('stream');
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const port =  process.env.PORT || 3030;
-const path = require('path');
 
 const { MongoClient, GridFSBucket } = require('mongodb');
 const fs = require('fs');
@@ -30,6 +31,8 @@ app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
  extended: true}));
 app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //Start your server on a specified port
 app.listen(port, ()=>{
@@ -41,6 +44,7 @@ app.post('/MedOrganiser',async (req, res) =>{
 
     const data = req.body;
     reqUrl = req.baseUrl;
+    console.log(reqUrl+'->'+originalUrl+'<-');
 
     if(data != null) {
         response = res;
@@ -49,7 +53,7 @@ app.post('/MedOrganiser',async (req, res) =>{
         arrk = Object.keys(data);
         arrv = Object.values(data);
 
-        //console.log("-->"+JSON.stringify(obj));
+        console.log("-->"+JSON.stringify(obj));
 
 	    requestPostString().catch(console.error);
 	}
@@ -94,7 +98,13 @@ async function requestPostString() {
 }
 
 async function uploadFile(coll, patient, path, db) {
-        console.log("-->"+reqUrl+path);
+
+        const buffer = new Buffer(arrv[8], 'base64')
+        const readable = new Readable()
+        readable._read = () => {} // _read is required but you can noop it
+        readable.push(buffer)
+        readable.push(null)
+
         const fileName = patient+"_"+path.split('/').pop();
         const bName = arrv[1];
 
@@ -103,7 +113,7 @@ async function uploadFile(coll, patient, path, db) {
                            });
 
             // Read the file stream and upload
-            await fs.createReadStream(reqUrl+path).pipe(bucket.openUploadStream(fileName))
+            await readable.pipe(bucket.openUploadStream(fileName))
                 .on('error', function(error) {
                     console.log('Error:', error);
                 })
