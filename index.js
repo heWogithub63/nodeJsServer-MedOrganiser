@@ -44,7 +44,7 @@ app.post('/MedOrganiser',async (req, res) =>{
 
     const data = req.body;
     reqUrl = req.baseUrl;
-    console.log(reqUrl+'->'+originalUrl+'<-');
+    console.log('->'+reqUrl+'<-');
 
     if(data != null) {
         response = res;
