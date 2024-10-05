@@ -27,7 +27,13 @@ var reqUrl;
 
 
 // We are using our packages here
-app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+    limit: '35mb',
+    parameterLimit: 50000,
+  }),
+);       // to support JSON-encoded bodies
 
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
  extended: true}));
@@ -106,7 +112,7 @@ async function uploadFile(coll, patient, path, db) {
        var blob = new Blob( [arrv[8]], { type: "application/pdf" });
        var url = URL.createObjectURL(blob);
 
-       console.dir(url);
+       console.dir('--->'+url);
        const writeStream = fs.createWriteStream(url);
 
         const fileName = patient+"_"+path.split('/').pop();
