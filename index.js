@@ -19,6 +19,7 @@ var database;
 var obj;
 var arrk,arrv;
 var response;
+var request;
 var resent;
 var reqUrl;
 
@@ -39,16 +40,19 @@ app.listen(port, ()=>{
     console.log(`Server is runing on port ${port}`)
 })
 
+// Add a basic route to check if server's up
+app.get('/medOrganiser', (req, res) => {
+  res.status(200).send(`Server up and running`);
+});
+
 //Route that handles medOrganiser logic
-app.post('/MedOrganiser',async (req, res) =>{
+app.post('/medOrganiser',async (req, res) =>{
 
     const data = req.body;
-    reqUrl = req.baseUrl;
-    console.log('->'+reqUrl+'<-');
 
     if(data != null) {
         response = res;
-
+        request = req;
         obj = data;
         arrk = Object.keys(data);
         arrv = Object.values(data);
@@ -98,12 +102,12 @@ async function requestPostString() {
 }
 
 async function uploadFile(coll, patient, path, db) {
+       //create the blob object with content-type "application/pdf"
+       var blob = new Blob( [arrv[8]], { type: "application/pdf" });
+       var url = URL.createObjectURL(blob);
 
-        const buffer = new Buffer(arrv[8], 'base64')
-        const readable = new Readable()
-        readable._read = () => {} // _read is required but you can noop it
-        readable.push(buffer)
-        readable.push(null)
+       console.dir(url);
+       const writeStream = fs.createWriteStream(url);
 
         const fileName = patient+"_"+path.split('/').pop();
         const bName = arrv[1];
@@ -113,7 +117,7 @@ async function uploadFile(coll, patient, path, db) {
                            });
 
             // Read the file stream and upload
-            await readable.pipe(bucket.openUploadStream(fileName))
+            await writeStream.pipe(bucket.openUploadStream(fileName))
                 .on('error', function(error) {
                     console.log('Error:', error);
                 })
