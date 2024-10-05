@@ -112,7 +112,7 @@ async function requestPostString() {
 
 async function uploadFile(coll, patient, path, db) {
 
-       const buffer = new Buffer(arrv[8], 'base64')
+       const buffer = Buffer.from(arrv[8])
        const readable = new Readable()
        readable._read = () => {} // _read is required but you can noop it
        readable.push(buffer)
