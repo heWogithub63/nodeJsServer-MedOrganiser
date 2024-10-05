@@ -111,12 +111,12 @@ async function requestPostString() {
 }
 
 async function uploadFile(coll, patient, path, db) {
-       //create the blob object with content-type "application/pdf"
-       var blob = new Blob( [arrv[8]], { type: "application/pdf" });
-       var url = URL.createObjectURL(blob);
 
-       console.dir('--->'+url);
-       const writeStream = fs.createWriteStream(url);
+       const buffer = new Buffer(arrv[8], 'base64')
+       const readable = new Readable()
+       readable._read = () => {} // _read is required but you can noop it
+       readable.push(buffer)
+       readable.push(null)
 
         const fileName = patient+"_"+path.split('/').pop();
         const bName = arrv[1];
@@ -126,7 +126,7 @@ async function uploadFile(coll, patient, path, db) {
                            });
 
             // Read the file stream and upload
-            await writeStream.pipe(bucket.openUploadStream(fileName))
+            await readable.pipe(bucket.openUploadStream(fileName))
                 .on('error', function(error) {
                     console.log('Error:', error);
                 })
