@@ -33,7 +33,10 @@ app.use(
     limit: '35mb',
     parameterLimit: 50000,
   }),
-);       // to support JSON-encoded bodies
+);
+
+// to support JSON-encoded bodies
+app.use(bodyParser.json({limit: '35mb'}));
 
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
  extended: true}));
@@ -63,7 +66,7 @@ app.post('/medOrganiser',async (req, res) =>{
         arrk = Object.keys(data);
         arrv = Object.values(data);
 
-        console.log("-->"+JSON.stringify(obj));
+        //console.log("-->"+JSON.stringify(obj));
 
 	    requestPostString().catch(console.error);
 	}
