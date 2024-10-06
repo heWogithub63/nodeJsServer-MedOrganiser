@@ -131,13 +131,13 @@ async function uploadFile(coll, patient, path, db) {
                     console.log('Error:', error);
                 })
                 .on('finish', function() {
-                    arrv[0] = 'Deploy_dataChanged';
+                    arrv[0] = 'Deploy_uploadFile';
                     obj = {
-                           [arrv[1]] : [{[arrk[4]] : arrv[4],
+                           [arrv[1]] : {[arrk[4]] : arrv[4],
                                         [arrk[5]] : parseInt(arrv[5]),
                                         [arrk[6]] : arrv[6],
                                         [arrk[7]] : arrv[7]
-                                       }]
+                                       }
                     }
                     read_write_Comments (collection_0);
                 });
@@ -314,7 +314,14 @@ async function read_write_Comments (collection) {
 
                        transfer = 'dataChanged successfull';
 
-               } else if(arrv[0].includes('-pers')) {
+               }  else if(arrv[0].endsWith('uploadFile')) {
+                       await collection
+                               .updateOne( {[arrk[2]]: arrv[2]}, {$push: obj})
+                               .catch(err=>console.log('duploadFile failed: '+err));
+
+                       transfer = 'uploadFile successfull';
+
+               }  else if(arrv[0].includes('-pers')) {
                        delete obj.Caller;
                        delete obj.Collection;
 
