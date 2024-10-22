@@ -411,6 +411,17 @@ async function read_write_Comments (collection) {
                    }
                    transfer = 'successfull';
 
+               } else if(arrv[0].endsWith('sendAbr')) {
+                   await collection
+                         .insertOne(obj)
+
+                         .catch(err=>console.log('AbrData insert failed: '+err));
+                   await collection_1
+                         .updateOne({$or: [{[arrk[4]]: arrv[4]}, {Name: {$regex: arrv[3].substring(arrv[3].lastIndexOf(' '))}}]}, {$set: {[arrk[5]]: arrv[5]}})
+                         .then(data=> {
+                                        transfer = 'Erfolgreicher Eintrag der AbrechnungsDaten:';
+                         })
+                         .catch(err=>console.log('insert failed: '+err));
                }
 
                transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
