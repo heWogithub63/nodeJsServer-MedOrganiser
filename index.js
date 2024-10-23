@@ -412,6 +412,9 @@ async function read_write_Comments (collection) {
                    transfer = 'successfull';
 
                } else if(arrv[0].endsWith('sendAbr')) {
+                   delete obj.Caller;
+                   delete obj.Collection;
+
                    await collection
                          .insertOne(obj)
 
