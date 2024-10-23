@@ -412,19 +412,33 @@ async function read_write_Comments (collection) {
                    transfer = 'successfull';
 
                } else if(arrv[0].endsWith('sendAbr')) {
+                   var found = false;
                    delete obj.Caller;
                    delete obj.Collection;
-
                    await collection
-                         .insertOne(obj)
+                         .find({$and: [{[arrk[3]]: arrv[3]}, {[arrk[4]]: arrv[4]}]})
+                         .then(result=> {
+                               if(result != null)
+                                    found = true;
+                         });
+                   if(found == false) {
+                         await collection
+                               .insertOne(obj)
 
-                         .catch(err=>console.log('AbrData insert failed: '+err));
+                               .catch(err=>console.log('AbrData insert failed: '+err));
+                   } else {
+                         await collection
+                               .updateOne({[arrk[3]]: arrv[3]}, { $push: {[arrk[7]]: arrv[7]}})
+                               .catch(err=>console.log('AbrData not updated: '+err));
+                   }
+
                    await collection_1
                          .updateOne({$or: [{[arrk[4]]: arrv[4]}, {Name: {$regex: arrv[3].substring(arrv[3].lastIndexOf(' '))}}]}, {$set: {[arrk[5]]: arrv[5]}})
                          .then(data=> {
                                         transfer = 'Erfolgreicher Eintrag der AbrechnungsDaten:';
                          })
                          .catch(err=>console.log('insert failed: '+err));
+
                }
 
                transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
