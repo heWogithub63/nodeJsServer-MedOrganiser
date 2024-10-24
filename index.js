@@ -456,7 +456,7 @@ async function read_write_Comments (collection) {
 
 
                    await collection_1
-                         .updateOne({$or: [{[arrk[4]]: arrv[4]}, {Name: {$regex: arrv[3].substring(arrv[3].lastIndexOf(' '))}}]}, {$set: {[arrk[5]]: arrv[5]}})
+                         .updateOne({$or: [{[arrk[3]]: arrv[3]}, {Name: {$regex: arrv[2].substring(arrv[2].lastIndexOf(' '))}}]}, {$set: {[arrk[4]]: arrv[4]}})
                          .then(data=> {
 
                                         transfer = 'Erfolgreicher Eintrag der AbrechnungsDaten:';
