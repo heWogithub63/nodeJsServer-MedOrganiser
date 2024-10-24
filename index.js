@@ -427,13 +427,13 @@ async function read_write_Comments (collection) {
                                     .then(result=> {
 
                                           if(result !== null)   {
-                                               var ar1 = JSON.stringify(arrv[6]);
+                                               var ar1 = JSON.stringify(arrv[5]);
                                                    ar1 = ar1.substring(1,ar1.length -1);
                                                console.dir(ar1);
-                                               arrv[6] = JSON.parse(ar1);
+                                               arrv[5] = JSON.parse(ar1);
 
                                                collection
-                                                    .updateOne({[arrk[2]]: arrv[2]}, { $push: {[arrk[6]]: arrv[6]}})
+                                                    .updateOne({[arrk[2]]: arrv[2]}, { $push: {[arrk[5]]: arrv[5]}})
                                                     .then(data=> {
 
                                                     })
