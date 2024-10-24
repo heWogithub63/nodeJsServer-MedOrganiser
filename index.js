@@ -193,6 +193,7 @@ function getRandomInt(min, max) {
 async function read_write_Comments (collection) {
 
       if(arrv[0].startsWith('Deploy')) {
+
            var transfer ="";
            try {
 
@@ -412,41 +413,64 @@ async function read_write_Comments (collection) {
                    transfer = 'successfull';
 
                } else if(arrv[0].endsWith('sendAbr')) {
-                   var found = false;
+                   console.dir(arrv[0]);
+                   var next = false;
+                   var collexist = false;
                    delete obj.Caller;
                    delete obj.Collection;
-                   await collection
-                         .find({$and: [{[arrk[3]]: arrv[3]}, {[arrk[4]]: arrv[4]}]})
-                         .then(result=> {
-                               if(result != null)
-                                    found = true;
-                         });
-                   if(found == false) {
-                         await collection
-                               .insertOne(obj)
 
-                               .catch(err=>console.log('AbrData insert failed: '+err));
-                   } else {
-                         await collection
-                               .updateOne({[arrk[3]]: arrv[3]}, { $push: {[arrk[7]]: arrv[7]}})
-                               .catch(err=>console.log('AbrData not updated: '+err));
-                   }
+                   await database.listCollections({name: arrv[1]})
+                       .next(function(err, collinfo) {
+                           if (collinfo) {
+                               collection
+                                    .findOne({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]]: arrv[3]}]})
+                                    .then(result=> {
+
+                                          if(result !== null)   {
+                                               var ar1 = JSON.stringify(arrv[6]);
+                                                   ar1 = ar1.substring(1,ar1.length -1);
+                                               console.dir(ar1);
+                                               arrv[6] = JSON.parse(ar1);
+
+                                               collection
+                                                    .updateOne({[arrk[2]]: arrv[2]}, { $push: {[arrk[6]]: arrv[6]}})
+                                                    .then(data=> {
+
+                                                    })
+                                          } else {
+                                             collection
+                                                 .insertOne(obj)
+                                                 .then(data=> {
+
+                                                 })
+                                          }
+                                    }) ;
+                           } else {
+                               collection
+                                     .insertOne(obj)
+                                     .then(data=> {
+
+                                     })
+                           };
+                       });
+
 
                    await collection_1
                          .updateOne({$or: [{[arrk[4]]: arrv[4]}, {Name: {$regex: arrv[3].substring(arrv[3].lastIndexOf(' '))}}]}, {$set: {[arrk[5]]: arrv[5]}})
                          .then(data=> {
+
                                         transfer = 'Erfolgreicher Eintrag der AbrechnungsDaten:';
                          })
-                         .catch(err=>console.log('insert failed: '+err));
+
 
                }
 
                transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
                response.status(200).json({body: JSON.stringify(transfer)});
 
-           } catch (error) {
-                   response.status(400).json({ error: error });
-           }
+                } catch (error) {
+                        response.status(400).json({ error: error });
+                }
       }
 
       if(arrv[0].startsWith('Request')) {
