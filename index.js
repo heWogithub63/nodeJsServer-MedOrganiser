@@ -511,7 +511,6 @@ async function read_write_Comments (collection) {
                 } else if(arrv[0].endsWith('personalDaten')) {
                     transfer = "";
 
-                    console.dir(arrk[2]+'---'+arrv[2]+'---'+arrv.length+'---'+transfer+'---');
                     if(transfer == "" && arrv.length > 3) {
                        var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
                        var key = fS+'.PatVersicherungsNummer',
@@ -646,7 +645,7 @@ async function read_write_Comments (collection) {
                                                 var val = data[i];
 
                                                 if(key == arrv[2]) {
-                                                   st = JSON.stringify(val.map(function(item) {return [item.Autorisiert, item.Name, item.Geburtsdatum, item.Typ].join('°');})).replace('[','').replace(']','').replaceAll('"','');
+                                                   st = JSON.stringify(val.map(function(item) {return [item.Autorisiert_von_Name, item.PatName, item.PatVersicherungsNummer, item.Typ].join('°');})).replace('[','').replace(']','').replaceAll('"','');
                                                 }
                                             }
 
