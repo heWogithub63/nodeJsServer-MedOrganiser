@@ -83,7 +83,7 @@ async function requestPostString() {
         collection_0 = client.db("MedOrganiser").collection('Patient');
         collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
         collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
-
+        collection_3 = client.db("MedOrganiser").collection('Personal');
         try {
                 await client.connect((err) => {
 		                if (err) {
@@ -429,7 +429,7 @@ async function read_write_Comments (collection) {
                                           if(result !== null)   {
                                                var ar1 = JSON.stringify(arrv[5]);
                                                    ar1 = ar1.substring(1,ar1.length -1);
-                                               console.dir(ar1);
+
                                                arrv[5] = JSON.parse(ar1);
 
                                                collection
@@ -511,18 +511,44 @@ async function read_write_Comments (collection) {
                 } else if(arrv[0].endsWith('personalDaten')) {
                     transfer = "";
 
-                    await collection
-                          .find({ [arrk[2]]: arrv[2] })
-                          .forEach(function(data){
-                                   for(var i in data){
-                                       var key = i;
-                                       var val = data[i];
-                                       if(key != '_id' && key != 'isActive' && key != 'VersicherungsNummer')
-                                          transfer = transfer + val +'-->';
-                                   }
+                    console.dir(arrk[2]+'---'+arrv[2]+'---'+arrv.length+'---'+transfer+'---');
+                    if(transfer == "" && arrv.length > 3) {
+                       var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
+                       var key = fS+'.PatVersicherungsNummer',
+                            key1 = fS+'.$';
 
+                       await collection_3
+                            .find({ [key]: arrv[2]}, {[key1]: 1, '_id': 0})
+                            .forEach(function (data) {
+                                  for(var i in data){
+                                      var key = i;
+                                      var val = data[i];
+
+                                      if(key == fS) {
+                                         var map = val.map(item => item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer);
+                                         transfer = transfer + map +'-->';
+                                      }
+                                  }
+                            })
+                    } else {
+
+                       await collection
+                          .find({ [arrk[2]]: arrv[2] })
+                          .forEach (data => {
+
+                                      if(data != null) {
+                                          for(var i in data){
+                                              var key = i;
+                                              var val = data[i];
+                                              if(key != '_id' && key != 'isActive' && key != 'VersicherungsNummer')
+                                                    transfer = transfer + val +'-->';
+                                          }
+                                      }
                           })
+
                           .catch(err=>console.log('personalData failed: '+err));
+                    }
+
 
                 } else if(arrv[0].endsWith('patDiagnostik')) {
 
