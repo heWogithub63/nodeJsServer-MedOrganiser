@@ -512,9 +512,11 @@ async function read_write_Comments (collection) {
                     transfer = "";
 
                     if(transfer == "" && arrv.length > 3) {
+                       var next = false;
                        var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
                        var key = fS+'.PatVersicherungsNummer',
                             key1 = fS+'.$';
+                       var map;
 
                        await collection_3
                             .find({ [key]: arrv[2]}, {[key1]: 1, '_id': 0})
@@ -524,11 +526,27 @@ async function read_write_Comments (collection) {
                                       var val = data[i];
 
                                       if(key == fS) {
-                                         var map = val.map(item => item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer);
-                                         transfer = transfer + map +'-->';
+                                         next = true;
+                                         map = val.map(item => item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer);
+
                                       }
                                   }
                             })
+                       if(next) {
+                             var arrStr = JSON.stringify(map);
+                                 arrStr = arrStr.replace('["','').replace('"]','');
+                             var arr = arrStr.split('-->');
+
+                             await collection_1
+                                     .find({$and: [{Name: arr[0]}, {VersicherungsNummer: arr[1]}] })
+                                     .forEach (data => {
+                                        transfer = transfer +data.Name+'-->'+data.Addresse+'-->'+data.Kassenzulassung+'-->'+data.Qualifikation+'-->'+data.Tel+'-->'+
+                                                             data.LebenslangeArztNr+'-->'+data.VersicherungsNummer+'-->';
+
+
+                                     })
+                                     .catch(err=>console.log('personalData failed: '+err));
+                       }
                     } else {
 
                        await collection
