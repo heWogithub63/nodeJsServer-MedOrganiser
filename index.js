@@ -527,8 +527,7 @@ async function read_write_Comments (collection) {
 
                                       if(key == fS) {
                                          next = true;
-                                         map = val.map(item => item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer);
-
+                                         map = val.map(item => item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer+'-->'+item.PatName);
                                       }
                                   }
                             })
@@ -540,10 +539,11 @@ async function read_write_Comments (collection) {
                              await collection_1
                                      .find({$and: [{Name: arr[0]}, {VersicherungsNummer: arr[1]}] })
                                      .forEach (data => {
-                                        transfer = transfer +data.Name+'-->'+data.Addresse+'-->'+data.Kassenzulassung+'-->'+data.Qualifikation+'-->'+data.Tel+'-->'+
+                                        if(data.Name !=  null)
+                                           transfer = data.Name+'-->'+data.Addresse+'-->'+data.Kassenzulassung+'-->'+data.Qualifikation+'-->'+data.Tel+'-->'+
                                                              data.LebenslangeArztNr+'-->'+data.VersicherungsNummer+'-->';
-
-
+                                        else
+                                           transfer = arrStr;
                                      })
                                      .catch(err=>console.log('personalData failed: '+err));
                        }
