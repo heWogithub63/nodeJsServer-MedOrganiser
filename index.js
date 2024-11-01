@@ -527,7 +527,7 @@ async function read_write_Comments (collection) {
 
                                       if(key == fS) {
                                          next = true;
-                                         map = val.map(item => item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer+'-->'+item.PatName);
+                                         map = val.map(item => item.PatName+'-->'+item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer);
                                       }
                                   }
                             })
@@ -537,7 +537,7 @@ async function read_write_Comments (collection) {
                              var arr = arrStr.split('-->');
 
                              await collection_1
-                                     .find({$and: [{Name: arr[0]}, {VersicherungsNummer: arr[1]}] })
+                                     .find({$and: [{Name: arr[1]}, {VersicherungsNummer: arr[2]}] })
                                      .forEach (data => {
                                         if(data.Name !=  null)
                                            transfer = data.Name+'-->'+data.Addresse+'-->'+data.Kassenzulassung+'-->'+data.Qualifikation+'-->'+data.Tel+'-->'+
