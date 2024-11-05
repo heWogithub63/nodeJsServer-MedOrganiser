@@ -22,6 +22,7 @@ var response;
 var request;
 var resent;
 var reqUrl;
+var transfer = "";
 
 
 
@@ -194,7 +195,7 @@ async function read_write_Comments (collection) {
 
       if(arrv[0].startsWith('Deploy')) {
 
-           var transfer ="";
+
            try {
 
                if(arrv[0].endsWith('saveAufn')) {
@@ -272,8 +273,14 @@ async function read_write_Comments (collection) {
                                await collection
                                         .insertOne(obj)
                                         .then(data=> {
-                                                       transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr +'-->'+obj.AktivStatus})
+                                                       transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr +'-->'+obj.AktivStatus});
 
+                       }
+
+                       if(transfer != '') {
+                             transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
+                             response.status(200).json({body: JSON.stringify(transfer)});
+                          return;
                        }
 
                } else if(arrv[0].endsWith('dataChanged')) {
@@ -314,12 +321,23 @@ async function read_write_Comments (collection) {
 
                        transfer = 'dataChanged successfull';
 
+                       if(transfer != '') {
+                             transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
+                             response.status(200).json({body: JSON.stringify(transfer)});
+                          return;
+                       }
+
                }  else if(arrv[0].endsWith('uploadFile')) {
                        await collection
-                               .updateOne( {[arrk[2]]: arrv[2]}, {$push: obj})
-                               .catch(err=>console.log('duploadFile failed: '+err));
+                               .updateOne( {[arrk[2]]: arrv[2]}, {$push: obj});
 
                        transfer = 'uploadFile successfull';
+
+                       if(transfer != '') {
+                             transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
+                             response.status(200).json({body: JSON.stringify(transfer)});
+                          return;
+                       }
 
                }  else if(arrv[0].includes('-pers')) {
                        delete obj.Caller;
@@ -345,7 +363,7 @@ async function read_write_Comments (collection) {
                                                                 success = true;
                                                                 console.log('Erfolgreiche Addition der PedrsonalDaten');
                                                       }
-                                                    })
+                                                    });
 
                                  } else if(arrv[0].endsWith('Delete')) {
                                     delete s2.Datum;
@@ -357,7 +375,7 @@ async function read_write_Comments (collection) {
                                                   success = true;
                                                   console.log('Erfolgreicher Delete der PersonalDaten');
                                               }
-                                       })
+                                       });
 
                                  }
                               }
@@ -368,14 +386,14 @@ async function read_write_Comments (collection) {
                                     await collection_0
                                            .updateOne({ $and: [ {Name: s2.Name }, { Geburtsdatum: s2.Geburtsdatum } ] },{ $set: {AktivStatus: arrk[2] + ' Typ ' +s2.Typ}})
                                            .then(data=> {
-                                                          console.log('Erfolgreicher Eintrag in die PatientenDaten ')})
-                                           .catch(err=>console.log('insert failed: '+err));
+                                                          console.log('Erfolgreicher Eintrag in die PatientenDaten ')});
+
                                  } else   if(arrv[0].endsWith('Delete')) {
 
                                     await collection_0
                                            .updateOne({ $and: [ {Name: s2.Name }, { Geburtsdatum: s2.Geburtsdatum } ] },{ $set: {AktivStatus: 'Patient'}})
                                            .then(data=> {
-                                                          console.log('Erfolgreicher Delete in den PatientenDaten ')})
+                                                          console.log('Erfolgreicher Delete in den PatientenDaten ')});
 
                                  }
 
@@ -383,6 +401,12 @@ async function read_write_Comments (collection) {
                            }
                            if(i == s1.length -1)
                               transfer = 'Erfolgreiche Bearbeitung der Patienten- PersonalDaten -->';
+                       }
+
+                       if(transfer != '') {
+                             transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
+                             response.status(200).json({body: JSON.stringify(transfer)});
+                          return;
                        }
 
                } else if(arrv[0].endsWith('kldataSave')) {
@@ -411,8 +435,14 @@ async function read_write_Comments (collection) {
                    }
                    transfer = 'successfull';
 
+                   if(transfer != '') {
+                         transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
+                         response.status(200).json({body: JSON.stringify(transfer)});
+                      return;
+                   }
+
                } else if(arrv[0].endsWith('sendAbr')) {
-                   console.dir(arrv[0]);
+
                    var next = false;
                    var collexist = false;
                    delete obj.Caller;
@@ -459,16 +489,11 @@ async function read_write_Comments (collection) {
                          .then(data=> {
 
                                         transfer = 'Erfolgreicher Eintrag der AbrechnungsDaten:';
-                         })
-
+                            sendBack(transfer);
+                         });
 
                }
 
-               if(transfer != '') {
-                     transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
-                     response.status(200).json({body: JSON.stringify(transfer)});
-                  return;
-               }
 
            } catch (error) {
                    response.status(400).json({ error: error });
@@ -477,8 +502,6 @@ async function read_write_Comments (collection) {
       }
 
       if(arrv[0].startsWith('Request')) {
-                var transfer ="";
-                var list;
 
             try {
 
@@ -505,17 +528,20 @@ async function read_write_Comments (collection) {
                                             n++;
                                         });
 
-                                        //transfer =  transfer+ '-->';
                                     }
-                          })
+
+                                sendBack(transfer);
+                          });
+
 
 
                 } else if(arrv[0].endsWith('personalDaten')) {
-                    transfer = "";
+
                     var next = false;
+
                        await collection
                                  .findOne( {[arrk[2]]: arrv[2]}, function (err, data) {
-                                     if (err) { console.dir('an err occured') }
+                                     
                                      if (!data) {
                                               var next = false;
                                               var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
@@ -524,24 +550,35 @@ async function read_write_Comments (collection) {
                                               var map;
 
                                               collection_3
+
                                                      .find({ [key]:  arrv[2] })
-                                                     .forEach(function (result) {
-                                                           for(var i in result) {
-                                                               var key = i;
-                                                               var val = result[i];
-                                                               if(key == fS) {
-                                                                  map = val.map(item => item.PatName+'-->'+item.PatVersicherungsNummer+'-->'+item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer);
-                                                               }
-                                                           }
-                                                           var arrStr = JSON.stringify(map);
-                                                               arrStr = arrStr.replace('["','').replace('"]','');
-                                                           var arr = arrStr.split(',');
-                                                           for(var a=0;a<arr.length;a++)
-                                                               if(arr[a].includes(arrv[2]))
-                                                                  transfer = arr[a];
 
-                                                     })
+                                                           .forEach(function (result) {
 
+                                                              if(result) {
+                                                                 for(var i in result) {
+                                                                     var key = i;
+                                                                     var val = result[i];
+                                                                     if(key == fS) {
+                                                                        map = val.map(item => item.PatName+'-->'+item.PatVersicherungsNummer+'-->'+item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer);
+                                                                     }
+                                                                 }
+                                                                 var arrStr = JSON.stringify(map);
+                                                                     arrStr = arrStr.replace('["','').replace('"]','');
+
+                                                                 var arr = arrStr.split(',');
+
+                                                                 for(var a=0;a<arr.length;a++) {
+                                                                     arr[a] = JSON.stringify(arr[a]).replaceAll('"','');
+
+                                                                     if(arr[a].includes(arrv[2])) {
+                                                                        transfer = arr[a].replaceAll('\\','');
+                                                                     }
+                                                                 }
+                                                              }
+                                                              sendBack(transfer);
+
+                                                           })
 
 
                                      } else {
@@ -551,6 +588,7 @@ async function read_write_Comments (collection) {
                                              if(key != '_id' && key != 'isActive' && key != 'VersicherungsNummer')
                                                    transfer = transfer + val +'-->';
                                          }
+                                        sendBack(transfer);
                                      }
                                  })
 
@@ -582,7 +620,8 @@ async function read_write_Comments (collection) {
                                      }
 
                                  }
-                          })
+                                sendBack(transfer);
+                          });
 
 
                 } else if(arrv[0].endsWith('pat')) {
@@ -591,7 +630,9 @@ async function read_write_Comments (collection) {
                           .find({VersicherungsNummer: arrv[2]})
                           .forEach(function(result){
                                     transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.PLZWohnort+ '-->';
-                          })
+                               sendBack(transfer);
+                          });
+
 
                 } else if(arrv[0].endsWith('plz')) {
 
@@ -599,7 +640,9 @@ async function read_write_Comments (collection) {
                           .find({ PLZ_Ort: {$regex: arrv[2], $options: "i" } })
                           .forEach(function(result){
                                     transfer =  transfer + result.PLZ_Ort + '-->';
-                          })
+                              sendBack(transfer);
+                          });
+
 
                 } else if(arrv[0].endsWith('medE')) {
 
@@ -607,7 +650,8 @@ async function read_write_Comments (collection) {
                           .find({isActive: 'true', Addresse: {$regex: arrv[2], $options: "i" }, Qualifikation: {$regex: arrv[3], $options: "i" } })
                           .forEach(function(result){
                                    transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
-                          })
+                              sendBack(transfer);
+                          });
 
                 } else if(arrv[0].endsWith('readKalData')) {
 
@@ -629,7 +673,9 @@ async function read_write_Comments (collection) {
                                     }
 
                                  transfer = transfer + map;
-                             })
+
+                                 sendBack(transfer);
+                             });
 
 
                 } else if(arrv[0].endsWith('diagnosen')) {
@@ -639,7 +685,12 @@ async function read_write_Comments (collection) {
                                      .forEach(function(result){
 
                                               transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
-                                     })
+
+                                         sendBack(transfer);
+                                     });
+
+
+
                 } else if(arrv[0].endsWith('persSearch')) {
                          var transfer = '';
                          var st = '';
@@ -666,15 +717,9 @@ async function read_write_Comments (collection) {
                                                 if(ges[i].includes(arrv[3])) {
                                                    transfer = transfer + ges[i] + '-->';
                                                 }
+                                         sendBack(transfer);
+                                     });
 
-                                     })
-
-
-                }
-
-                if(transfer != '') {
-                   response.status(200).json({body: JSON.stringify(transfer)});
-                   return;
                 }
 
             } catch (error) {
@@ -684,5 +729,16 @@ async function read_write_Comments (collection) {
                     }
             }
       }
+}
+function sendBack (trans) {
+
+      if(trans != '') {
+         response.status(200).json({body: JSON.stringify(trans)});
+         return;
+      } else {
+         response.status(400).json({body: JSON.stringify('the-search-result-is-empty')});
+         return;
+      }
+
 }
 
