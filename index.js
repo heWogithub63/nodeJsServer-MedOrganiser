@@ -22,7 +22,6 @@ var response;
 var request;
 var resent;
 var reqUrl;
-var transfer = "";
 
 
 
@@ -195,7 +194,7 @@ async function read_write_Comments (collection) {
 
       if(arrv[0].startsWith('Deploy')) {
 
-
+           var transfer ="";
            try {
 
                if(arrv[0].endsWith('saveAufn')) {
@@ -273,14 +272,8 @@ async function read_write_Comments (collection) {
                                await collection
                                         .insertOne(obj)
                                         .then(data=> {
-                                                       transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr +'-->'+obj.AktivStatus});
-
-                       }
-
-                       if(transfer != '') {
-                             transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
-                             response.status(200).json({body: JSON.stringify(transfer)});
-                          return;
+                                                       transfer = 'Erfolgreicher Eintrag der PatientenDaten: VersNr >>' +VersNr +'-->'+obj.AktivStatus})
+                                        .catch(err=>console.log('insert failed: '+err));
                        }
 
                } else if(arrv[0].endsWith('dataChanged')) {
@@ -318,26 +311,16 @@ async function read_write_Comments (collection) {
 
                        await collection
                                .updateOne( {[arrk[2]]: arrv[2]}, {$set: obj})
+                               .catch(err=>console.log('datChanged failed: '+err));
 
                        transfer = 'dataChanged successfull';
 
-                       if(transfer != '') {
-                             transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
-                             response.status(200).json({body: JSON.stringify(transfer)});
-                          return;
-                       }
-
                }  else if(arrv[0].endsWith('uploadFile')) {
                        await collection
-                               .updateOne( {[arrk[2]]: arrv[2]}, {$push: obj});
+                               .updateOne( {[arrk[2]]: arrv[2]}, {$push: obj})
+                               .catch(err=>console.log('duploadFile failed: '+err));
 
                        transfer = 'uploadFile successfull';
-
-                       if(transfer != '') {
-                             transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
-                             response.status(200).json({body: JSON.stringify(transfer)});
-                          return;
-                       }
 
                }  else if(arrv[0].includes('-pers')) {
                        delete obj.Caller;
@@ -363,8 +346,8 @@ async function read_write_Comments (collection) {
                                                                 success = true;
                                                                 console.log('Erfolgreiche Addition der PedrsonalDaten');
                                                       }
-                                                    });
-
+                                                    })
+                                       .catch(err=>console.log('insert failed: '+err));
                                  } else if(arrv[0].endsWith('Delete')) {
                                     delete s2.Datum;
 
@@ -375,8 +358,8 @@ async function read_write_Comments (collection) {
                                                   success = true;
                                                   console.log('Erfolgreicher Delete der PersonalDaten');
                                               }
-                                       });
-
+                                       })
+                                        .catch(err=>console.log('delete failed: '+err));
                                  }
                               }
 
@@ -386,27 +369,21 @@ async function read_write_Comments (collection) {
                                     await collection_0
                                            .updateOne({ $and: [ {Name: s2.Name }, { Geburtsdatum: s2.Geburtsdatum } ] },{ $set: {AktivStatus: arrk[2] + ' Typ ' +s2.Typ}})
                                            .then(data=> {
-                                                          console.log('Erfolgreicher Eintrag in die PatientenDaten ')});
-
+                                                          console.log('Erfolgreicher Eintrag in die PatientenDaten ')})
+                                           .catch(err=>console.log('insert failed: '+err));
                                  } else   if(arrv[0].endsWith('Delete')) {
 
                                     await collection_0
                                            .updateOne({ $and: [ {Name: s2.Name }, { Geburtsdatum: s2.Geburtsdatum } ] },{ $set: {AktivStatus: 'Patient'}})
                                            .then(data=> {
-                                                          console.log('Erfolgreicher Delete in den PatientenDaten ')});
-
+                                                          console.log('Erfolgreicher Delete in den PatientenDaten ')})
+                                           .catch(err=>console.log('delete failed: '+err));
                                  }
 
                               success = false;
                            }
                            if(i == s1.length -1)
                               transfer = 'Erfolgreiche Bearbeitung der Patienten- PersonalDaten -->';
-                       }
-
-                       if(transfer != '') {
-                             transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
-                             response.status(200).json({body: JSON.stringify(transfer)});
-                          return;
                        }
 
                } else if(arrv[0].endsWith('kldataSave')) {
@@ -435,14 +412,8 @@ async function read_write_Comments (collection) {
                    }
                    transfer = 'successfull';
 
-                   if(transfer != '') {
-                         transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
-                         response.status(200).json({body: JSON.stringify(transfer)});
-                      return;
-                   }
-
                } else if(arrv[0].endsWith('sendAbr')) {
-
+                   console.dir(arrv[0]);
                    var next = false;
                    var collexist = false;
                    delete obj.Caller;
@@ -489,22 +460,24 @@ async function read_write_Comments (collection) {
                          .then(data=> {
 
                                         transfer = 'Erfolgreicher Eintrag der AbrechnungsDaten:';
-                            sendBack(transfer);
-                         });
+                         })
+
 
                }
 
+               transfer =  'Recall'+arrv[0]+' '+transfer+' -->completed';
+               response.status(200).json({body: JSON.stringify(transfer)});
 
            } catch (error) {
                    response.status(400).json({ error: error });
-                   return;
            }
       }
 
       if(arrv[0].startsWith('Request')) {
+                var transfer ="";
+                var list;
 
             try {
-
                 if(arrv[0].endsWith('patDaten')) {
                     var n = 0; 
                     await collection
@@ -528,69 +501,74 @@ async function read_write_Comments (collection) {
                                             n++;
                                         });
 
+                                        //transfer =  transfer+ '-->';
                                     }
+                          })
 
-                                sendBack(transfer);
-                          });
-
+                          .catch(err=>console.log('patData failed: '+err));
 
 
                 } else if(arrv[0].endsWith('personalDaten')) {
 
                     var next = false;
+                    var transfer = '';
 
                        await collection
-                                 .findOne( {[arrk[2]]: arrv[2]}, function (err, data) {
-                                     
-                                     if (!data) {
-                                              var next = false;
-                                              var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
-                                              var key = fS+'.PatVersicherungsNummer',
-                                                   key1 = fS+'.$';
-                                              var map;
+                                 .findOne( {[arrk[2]]: arrv[2]})
+                                 .then(data => {
 
-                                              collection_3
-
-                                                     .find({ [key]:  arrv[2] })
-
-                                                           .forEach(function (result) {
-
-                                                              if(result) {
-                                                                 for(var i in result) {
-                                                                     var key = i;
-                                                                     var val = result[i];
-                                                                     if(key == fS) {
-                                                                        map = val.map(item => item.PatName+'-->'+item.PatVersicherungsNummer+'-->'+item.Autorisiert_von_Name+'-->'+item.Autorisiert_von_VersicherungsNummer);
-                                                                     }
-                                                                 }
-                                                                 var arrStr = JSON.stringify(map);
-                                                                     arrStr = arrStr.replace('["','').replace('"]','');
-
-                                                                 var arr = arrStr.split(',');
-
-                                                                 for(var a=0;a<arr.length;a++) {
-                                                                     arr[a] = JSON.stringify(arr[a]).replaceAll('"','');
-
-                                                                     if(arr[a].includes(arrv[2])) {
-                                                                        transfer = arr[a].replaceAll('\\','');
-                                                                     }
-                                                                 }
-                                                              }
-                                                              sendBack(transfer);
-
-                                                           })
-
-
-                                     } else {
+                                     if(data !== null) {
                                          for(var i in data) {
                                              var key = i;
                                              var val = data[i];
                                              if(key != '_id' && key != 'isActive' && key != 'VersicherungsNummer')
                                                    transfer = transfer + val +'-->';
                                          }
-                                        sendBack(transfer);
-                                     }
-                                 })
+
+                                         sendBack(transfer);
+                                     } else
+                                        next = true;
+                                 });
+
+                       if( next ) {
+
+                           var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
+                           var key = fS+'.PatVersicherungsNummer',
+                                key1 = fS+'.$';
+                           var map;
+
+                           await collection_3
+
+                                    .find({ [key]:  arrv[2] })
+
+                                    .forEach(function (result) {
+
+                                       if(result) {
+                                          for(var i in result) {
+                                              var key = i;
+                                              var val = result[i];
+                                              
+                                              if(key == fS) {
+                                                 map = val.map(item => item.PatName+'°'+item.PatVersicherungsNummer+'°'+item.Autorisiert_von_Name+'°'+item.Autorisiert_von_VersicherungsNummer);
+                                              }
+                                          }
+                                          var arrStr = JSON.stringify(map);
+                                              arrStr = arrStr.replace('["','').replace('"]','');
+
+                                          var arr = arrStr.split(',');
+
+                                          for(var a=0;a<arr.length;a++) {
+                                              arr[a] = JSON.stringify(arr[a]).replaceAll('"','');
+
+                                              if(arr[a].includes(arrv[2])) {
+                                                 transfer = transfer + arr[a].replaceAll('\\','') +'-->';
+                                              }
+                                          }
+                                       }
+
+                                    });
+
+                       }
 
 
                 } else if(arrv[0].endsWith('patDiagnostik')) {
@@ -620,8 +598,8 @@ async function read_write_Comments (collection) {
                                      }
 
                                  }
-                                sendBack(transfer);
-                          });
+                          })
+                          .catch(err=>console.log('READDIAGNOSTIK failed: '+err))
 
 
                 } else if(arrv[0].endsWith('pat')) {
@@ -630,29 +608,21 @@ async function read_write_Comments (collection) {
                           .find({VersicherungsNummer: arrv[2]})
                           .forEach(function(result){
                                     transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.PLZWohnort+ '-->';
-                               sendBack(transfer);
-                          });
-
-
+                          })
                 } else if(arrv[0].endsWith('plz')) {
 
                     await collection
                           .find({ PLZ_Ort: {$regex: arrv[2], $options: "i" } })
                           .forEach(function(result){
                                     transfer =  transfer + result.PLZ_Ort + '-->';
-                              sendBack(transfer);
-                          });
-
-
+                          })
                 } else if(arrv[0].endsWith('medE')) {
 
                     await collection
                           .find({isActive: 'true', Addresse: {$regex: arrv[2], $options: "i" }, Qualifikation: {$regex: arrv[3], $options: "i" } })
                           .forEach(function(result){
                                    transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
-                              sendBack(transfer);
-                          });
-
+                          })
                 } else if(arrv[0].endsWith('readKalData')) {
 
                     transfer = "";
@@ -673,10 +643,8 @@ async function read_write_Comments (collection) {
                                     }
 
                                  transfer = transfer + map;
-
-                                 sendBack(transfer);
-                             });
-
+                             })
+                             .catch(err=>console.log('insert failed: '+err))
 
                 } else if(arrv[0].endsWith('diagnosen')) {
 
@@ -685,12 +653,7 @@ async function read_write_Comments (collection) {
                                      .forEach(function(result){
 
                                               transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
-
-                                         sendBack(transfer);
-                                     });
-
-
-
+                                     })
                 } else if(arrv[0].endsWith('persSearch')) {
                          var transfer = '';
                          var st = '';
@@ -717,28 +680,18 @@ async function read_write_Comments (collection) {
                                                 if(ges[i].includes(arrv[3])) {
                                                    transfer = transfer + ges[i] + '-->';
                                                 }
-                                         sendBack(transfer);
-                                     });
+
+                                     })
+
 
                 }
 
+
+                response.status(200).json({body: JSON.stringify(transfer)});
+
             } catch (error) {
-                   if(error) {
                     response.status(400).json({ error: error });
-                     return;
-                    }
             }
       }
-}
-function sendBack (trans) {
-
-      if(trans != '') {
-         response.status(200).json({body: JSON.stringify(trans)});
-         return;
-      } else {
-         response.status(400).json({body: JSON.stringify('the-search-result-is-empty')});
-         return;
-      }
-
 }
 
