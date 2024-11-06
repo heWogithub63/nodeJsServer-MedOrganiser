@@ -22,6 +22,7 @@ var response;
 var request;
 var resent;
 var reqUrl;
+var trans;
 
 
 
@@ -482,7 +483,7 @@ async function read_write_Comments (collection) {
                     var n = 0; 
                     await collection
                           .find({[arrk[2]]: arrv[2]})
-                          .forEach(function(obj) {
+                          .forEach(obj => {
                                     if(obj != null) {
 
                                         Object.keys(obj).forEach((k, i) => {
@@ -500,13 +501,10 @@ async function read_write_Comments (collection) {
                                             }  
                                             n++;
                                         });
-
-                                        //transfer =  transfer+ '-->';
+                                       dataReturn(transfer);
                                     }
-                          })
 
-                          .catch(err=>console.log('patData failed: '+err));
-
+                          });
 
                 } else if(arrv[0].endsWith('personalDaten')) {
 
@@ -514,92 +512,87 @@ async function read_write_Comments (collection) {
                     var transfer = '';
 
                        await collection
-                                 .findOne( {[arrk[2]]: arrv[2]})
+                                 .findOne( {[arrk[2]]: arrv[2]} )
                                  .then(data => {
 
-                                     if(data !== null) {
-                                         for(var i in data) {
-                                             var key = i;
-                                             var val = data[i];
+                                       if(data != null) {
+                                           for(var i in data) {
+                                               var key = i;
+                                               var val = data[i];
 
-                                             if(key != '_id' && key != 'isActive' && key != 'VersicherungsNummer')
-                                                   transfer = transfer + val +'-->';
-                                         }
+                                               if(key != '_id' && key != 'isActive' && key != 'VersicherungsNummer')
+                                                     transfer = transfer + val +'°';
+                                           }
+                                           dataReturn(transfer +'-->');
+                                       } else {
 
-                                     } else
-                                        next = true;
-                                 });
+                                           var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
 
-                       if( next ) {
+                                           var key = fS+'.PatVersicherungsNummer';
+                                           var key1 = fS+'.$';
+                                           var map;
 
-                           var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
-                           var key = fS+'.PatVersicherungsNummer',
-                                key1 = fS+'.$';
-                           var map;
+                                           collection_3
+                                               .find({ [key]:  arrv[2] })
+                                               .forEach( result => {
 
-                           await collection_3
+                                                  if (result != null)   {
+                                                      for(var i in result) {
+                                                          var key = i;
+                                                          var val = result[i];
 
-                                    .find({ [key]:  arrv[2] })
+                                                          if(key == fS) {
+                                                             map = val.map(item => item.PatName+'°'+item.PatVersicherungsNummer+'°'+item.Autorisiert_von_Name+'°'+item.Autorisiert_von_VersicherungsNummer);
+                                                          }
+                                                      }
+                                                      var arrStr = JSON.stringify(map);
+                                                          arrStr = arrStr.replace('["','').replace('"]','');
 
-                                    .forEach(function (result) {
+                                                          if(arrStr.includes(arrv[2])) {
+                                                             transfer = transfer + arrStr +'-->';
+                                                             dataReturn(transfer);
+                                                          }
+                                                  }
 
-                                       if(result) {
-                                          for(var i in result) {
-                                              var key = i;
-                                              var val = result[i];
-                                              
-                                              if(key == fS) {
-                                                 map = val.map(item => item.PatName+'°'+item.PatVersicherungsNummer+'°'+item.Autorisiert_von_Name+'°'+item.Autorisiert_von_VersicherungsNummer);
-                                              }
-                                          }
-                                          var arrStr = JSON.stringify(map);
-                                              arrStr = arrStr.replace('["','').replace('"]','');
+                                               })
 
-                                          var arr = arrStr.split(',');
-
-                                          for(var a=0;a<arr.length;a++) {
-                                              arr[a] = JSON.stringify(arr[a]).replaceAll('"','');
-
-                                              if(arr[a].includes(arrv[2])) {
-                                                 transfer = transfer + arr[a].replaceAll('\\','') +'-->';
-                                              }
-                                          }
                                        }
-
-                                    });
-
-                       }
-
+                                 });
 
                 } else if(arrv[0].endsWith('patDiagnostik')) {
 
                     await collection
                           .find( {[arrk[2]]: arrv[2]})
                           .forEach(function(data){
-                                 for(var i in data){
-                                     var key = i;
-                                     var val = data[i];
 
-                                     if(key == 'Diagnostik') {
-                                         var map = val.map(item => item.Art+'>>'+item.Datum+'°'+item.Behandler+'°'+item.file);
-                                     }
+                                 if(data != null) {
+                                      for(var i in data){
+                                          var key = i;
+                                          var val = data[i];
+
+                                          if(key == 'Diagnostik') {
+                                              var map = val.map(item => item.Art+'>>'+item.Datum+'°'+item.Behandler+'°'+item.file);
+                                          }
+                                      }
+
+                                      var arr = Array.from(map.entries());
+
+                                      for(var i=0; i<arr.length; i++) {
+
+                                          var json = JSON.stringify(arr[i]).replaceAll('"','').replace('[','').replace(']','');
+                                              json = json.substring(json.indexOf(',') +1);
+
+                                          if(json.startsWith(arrv[3]) && parseInt(json.substring(json.indexOf('>>')+2,json.indexOf('°'))) >= parseInt(arrv[4])) {
+                                               transfer = transfer + json.substring(json.indexOf('>>')+2) + '-->';
+
+                                          }
+
+                                      }
+
+                                     dataReturn(transfer);
                                  }
 
-                                 var arr = Array.from(map.entries());
-
-                                 for(var i=0; i<arr.length; i++) {
-
-                                     var json = JSON.stringify(arr[i]).replaceAll('"','').replace('[','').replace(']','');
-                                         json = json.substring(json.indexOf(',') +1);
-
-                                     if(json.startsWith(arrv[3]) && parseInt(json.substring(json.indexOf('>>')+2,json.indexOf('°'))) >= parseInt(arrv[4])) {
-                                          transfer = transfer + json.substring(json.indexOf('>>')+2) + '-->';
-
-                                     }
-
-                                 }
-                          })
-                          .catch(err=>console.log('READDIAGNOSTIK failed: '+err))
+                          });
 
 
                 } else if(arrv[0].endsWith('pat')) {
@@ -607,22 +600,36 @@ async function read_write_Comments (collection) {
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
                           .forEach(function(result){
+
+                                 if(result != null) {
                                     transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.PLZWohnort+ '-->';
-                          })
+                                    dataReturn(transfer);
+                                 }
+                          });
+
                 } else if(arrv[0].endsWith('plz')) {
 
                     await collection
                           .find({ PLZ_Ort: {$regex: arrv[2], $options: "i" } })
                           .forEach(function(result){
+
+                                 if(result != null) {
                                     transfer =  transfer + result.PLZ_Ort + '-->';
-                          })
+                                    dataReturn(transfer);
+                                 }
+                          });
+
                 } else if(arrv[0].endsWith('medE')) {
 
                     await collection
                           .find({isActive: 'true', Addresse: {$regex: arrv[2], $options: "i" }, Qualifikation: {$regex: arrv[3], $options: "i" } })
                           .forEach(function(result){
+                                if(result != null) {
                                    transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
-                          })
+                                   dataReturn(transfer);
+                                }
+                          });
+
                 } else if(arrv[0].endsWith('readKalData')) {
 
                     transfer = "";
@@ -630,64 +637,69 @@ async function read_write_Comments (collection) {
                        await collection
                              .find({[arrk[2]]: arrv[2]})
                              .forEach(function(data){
+                                    if(data != null) {
+                                        for(var i in data){
+                                             var key = i;
+                                             var val = data[i];
+                                             if(key == 'Name')
+                                                transfer = transfer + val + '-->';
+                                             if(key == 'KalenderBlatt') {
+                                               var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
 
-                                    for(var i in data){
-                                         var key = i;
-                                         var val = data[i];
-                                         if(key == 'Name')
-                                            transfer = transfer + val + '-->';
-                                         if(key == 'KalenderBlatt') {
-                                           var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
+                                             }
+                                        }
 
-                                         }
+                                        transfer = transfer + map;
+                                        dataReturn(transfer);
                                     }
+                             });
 
-                                 transfer = transfer + map;
-                             })
-                             .catch(err=>console.log('insert failed: '+err))
 
                 } else if(arrv[0].endsWith('diagnosen')) {
 
                              await collection
                                      .find({$or: [{ICD10: {$regex:arrv[2]}}, {Diagnose: {$regex:arrv[2]}}]},{ _id: 0 })
                                      .forEach(function(result){
+                                              if(result != null) {
+                                                 transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
+                                                 dataReturn(transfer);
+                                              }
+                                     });
 
-                                              transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
-                                     })
+
                 } else if(arrv[0].endsWith('persSearch')) {
                          var transfer = '';
+
                          var st = '';
                          var str = arrv[2] + '.' +arrk[3];
 
                              await collection
                                      .find({ [str]: arrv[3] })
-                                     .forEach(function(data){
-                                            for(var i in data){
-                                                var key = i;
-                                                var val = data[i];
+                                     .forEach(function(data) {
+                                          if(data != null) {
+                                              for(var i in data){
+                                                  var key = i;
+                                                  var val = data[i];
 
-                                                if(key == arrv[2]) {
-                                                   st = JSON.stringify(val.map(function(item) {return [item.Autorisiert_von_Name, item.PatName, item.PatVersicherungsNummer, item.Typ].join('°');})).replace('[','').replace(']','').replaceAll('"','');
-                                                }
-                                            }
+                                                  if(key == arrv[2]) {
+                                                     st = JSON.stringify(val.map(function(item) {return [item.Autorisiert_von_Name, item.PatName, item.PatVersicherungsNummer, item.Typ].join('°');})).replace('[','').replace(']','').replaceAll('"','');
+                                                  }
+                                              }
+                                          } else  {
+                                              var ges = st.split(',');
 
-                                     })
-                                     .then(res => {
+                                              for(var i=0;i<ges.length;i++)
+                                                  if(ges[i].includes(arrv[3])) {
+                                                     transfer = transfer + ges[i] + '-->';
+                                                  }
 
-                                            var ges = st.split(',');
-
-                                            for(var i=0;i<ges.length;i++)
-                                                if(ges[i].includes(arrv[3])) {
-                                                   transfer = transfer + ges[i] + '-->';
-                                                }
-
-                                     })
-
+                                              dataReturn(transfer);
+                                          }
+                                     });
 
                 }
 
 
-                response.status(200).json({body: JSON.stringify(transfer)});
 
             } catch (error) {
                     response.status(400).json({ error: error });
@@ -695,3 +707,7 @@ async function read_write_Comments (collection) {
       }
 }
 
+async function dataReturn (trans) {
+       console.dir('---'+trans+'---');
+       await response.status(200).json({body: JSON.stringify(trans)});
+}
