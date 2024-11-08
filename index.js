@@ -414,7 +414,7 @@ async function read_write_Comments (collection) {
                    transfer = 'successfull';
 
                } else if(arrv[0].endsWith('sendAbr')) {
-                   console.dir(arrv[0]);
+
                    var next = false;
                    var collexist = false;
                    delete obj.Caller;
@@ -475,55 +475,79 @@ async function read_write_Comments (collection) {
       }
 
       if(arrv[0].startsWith('Request')) {
-                var transfer ="";
-                var list;
+
+            var list;
 
             try {
                 if(arrv[0].endsWith('patDaten')) {
-                    var n = 0; 
+
+                    transfer = "";
+                    var n = 0;
+                    var n1 = 0;
+
                     await collection
                           .find({[arrk[2]]: arrv[2]})
-                          .forEach(obj => {
-                                    if(obj != null) {
+                          .forEach(result => {
 
-                                        Object.keys(obj).forEach((k, i) => {
+                                    if(result != null) {
 
-                                            if (n > 2  && n < 15) {
-                                                 transfer = transfer +k+"---"+obj[k]+'°';
+                                        if(n1 === 0)
+                                           for(k in result)
+                                               if(k !== '_id') n++;
+
+                                        for(k in result) {
+
+                                            if (n1 > 2  && n1 < 15) {
+                                                 transfer = transfer +k+"---"+result[k]+'°';
                                             }
-                                            else if(n >= 15)  {
+                                            else if(n1 >= 15)  {
 
                                                      transfer = transfer.substring(0,transfer.length -1) +'-->'+k+'---';
-                                                     Object.keys(obj[k]).forEach((j, l) => {
-                                                           transfer = transfer+ JSON.stringify(obj[k][j]) +'^';
+                                                     Object.keys(result[k]).forEach((j, l) => {
+                                                           transfer = transfer+ JSON.stringify(result[k][j]) +'^';
                                                       });
                                                 transfer = transfer +'°';
-                                            }  
-                                            n++;
-                                        });
-                                       dataReturn(transfer);
-                                    }
+                                            }
+
+                                           
+                                           if(n1 === n -1)
+                                                   dataReturn(transfer);
+                                          n1++;
+
+                                        }
+
+                                    } else
+                                        dataReturn(transfer);
 
                           });
 
                 } else if(arrv[0].endsWith('personalDaten')) {
 
-                    var next = false;
-                    var transfer = '';
+                    transfer = "";
+                    var n = 0;
+                    var n1 = 0;
 
                        await collection
                                  .findOne( {[arrk[2]]: arrv[2]} )
                                  .then(data => {
 
                                        if(data != null) {
+                                           if(n1 === 0)
+                                              for(k in data) if(k != '_id' && k != 'isActive') n++;
+
                                            for(var i in data) {
                                                var key = i;
                                                var val = data[i];
 
-                                               if(key != '_id' && key != 'isActive' && key != 'VersicherungsNummer')
-                                                     transfer = transfer + val +'°';
+                                               if(key != '_id' && key != 'isActive') {
+                                                     transfer = transfer + key +'---'+ val +'°';
+                                                     n1++;
+                                               }
                                            }
-                                           dataReturn(transfer +'-->');
+
+                                           if(n1 === n)
+                                                  dataReturn(transfer);
+
                                        } else {
 
                                            var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
@@ -537,35 +561,51 @@ async function read_write_Comments (collection) {
                                                .forEach( result => {
 
                                                   if (result != null)   {
+                                                      if(n1 === 0)
+                                                         for(k in result) if(k !== '_id') n++;
+
                                                       for(var i in result) {
                                                           var key = i;
                                                           var val = result[i];
 
                                                           if(key == fS) {
-                                                             map = val.map(item => item.PatName+'°'+item.PatVersicherungsNummer+'°'+item.Autorisiert_von_Name+'°'+item.Autorisiert_von_VersicherungsNummer);
+                                                             map = val.map(item => 'PatName---'+item.PatName+'°'+'PatVersicherungsNummer---'+item.PatVersicherungsNummer+'°'+'Autorisiert_von_Name---'+
+                                                                                    item.Autorisiert_von_Name+'°'+'Autorisiert_von_VersicherungsNummer---'+item.Autorisiert_von_VersicherungsNummer);
                                                           }
                                                       }
-                                                      var arrStr = JSON.stringify(map);
-                                                          arrStr = arrStr.replace('["','').replace('"]','');
 
-                                                          if(arrStr.includes(arrv[2])) {
-                                                             transfer = transfer + arrStr +'-->';
-                                                             dataReturn(transfer);
-                                                          }
-                                                  }
+                                                      if(n1 === n -1) {
 
-                                               })
+                                                         var arrStr = JSON.stringify(map);
+                                                             arrStr = arrStr.replace('["','').replace('"]','');
 
+                                                             if(arrStr.includes(arrv[2]))
+                                                                transfer = transfer + arrStr +'-->';
+
+                                                         dataReturn(transfer);
+                                                      }
+                                                     n1++;
+                                                  } else
+                                                      dataReturn(transfer);
+                                               });
                                        }
                                  });
 
                 } else if(arrv[0].endsWith('patDiagnostik')) {
+
+                    transfer = "";
+                    var n = 0;
+                    var n1 = 0;
 
                     await collection
                           .find( {[arrk[2]]: arrv[2]})
                           .forEach(function(data){
 
                                  if(data != null) {
+
+                                      if(n1 === 0)
+                                         for(k in data) if(k !== '_id') n++;
+
                                       for(var i in data){
                                           var key = i;
                                           var val = data[i];
@@ -589,56 +629,98 @@ async function read_write_Comments (collection) {
 
                                       }
 
-                                     dataReturn(transfer);
-                                 }
+                                       if(n1 === n -1)
+                                             dataReturn(transfer);
+                                    n1++;
+                                 } else
+                                       dataReturn(transfer);
 
                           });
 
 
                 } else if(arrv[0].endsWith('pat')) {
 
+                    transfer = "";
+                    var n = 0;
+                    var n1 = 0;
+
                     await collection
                           .find({VersicherungsNummer: arrv[2]})
                           .forEach(function(result){
 
                                  if(result != null) {
+                                    if(n1 === 0)
+                                       for(k in result) if(k !== '_id') n++;
+
                                     transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.PLZWohnort+ '-->';
-                                    dataReturn(transfer);
-                                 }
+
+                                    if(n1 === n -1)
+                                       dataReturn(transfer);
+                                    n1++;
+                                 } else
+                                       dataReturn(transfer);
+
                           });
 
                 } else if(arrv[0].endsWith('plz')) {
+
+                    transfer = "";
+                    var n = 0;
+                    var n1 = 0;
 
                     await collection
                           .find({ PLZ_Ort: {$regex: arrv[2], $options: "i" } })
                           .forEach(function(result){
 
                                  if(result != null) {
+                                    if(n1 === 0)
+                                       for(k in result) if(k !== '_id') n++;
+
                                     transfer =  transfer + result.PLZ_Ort + '-->';
-                                    dataReturn(transfer);
-                                 }
+                                    if(n1 === n -1)
+                                       dataReturn(transfer);
+                                    n1++;
+                                 } else
+                                       dataReturn(transfer);
                           });
 
                 } else if(arrv[0].endsWith('medE')) {
 
+                    transfer = "";
+                    var n = 0;
+                    var n1 = 0;
+
                     await collection
                           .find({isActive: 'true', Addresse: {$regex: arrv[2], $options: "i" }, Qualifikation: {$regex: arrv[3], $options: "i" } })
-                          .forEach(function(result){
+                          .forEach(function(result) {
+
                                 if(result != null) {
+                                   if(n1 === 0)
+                                      for(k in result) if(k !== '_id') n++;
+
                                    transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
-                                   dataReturn(transfer);
-                                }
+                                   if(n1 === n -1)
+                                      dataReturn(transfer);
+                                   n1++;
+                                } else
+                                      dataReturn(transfer);
+
                           });
 
                 } else if(arrv[0].endsWith('readKalData')) {
 
-                    transfer = "";
+                    var transfer = '';
+                    var n = 0;
+                    var n1 = 0;
 
                        await collection
                              .find({[arrk[2]]: arrv[2]})
                              .forEach(function(data){
                                     if(data != null) {
-                                        for(var i in data){
+                                        if(n1 === 0)
+                                           for(k in result) if(k !== '_id') n++;
+
+                                        for(var i in data) {
                                              var key = i;
                                              var val = data[i];
                                              if(key == 'Name')
@@ -648,27 +730,41 @@ async function read_write_Comments (collection) {
 
                                              }
                                         }
+                                        if(n1 === n -1)
+                                           dataReturn(transfer + map);
 
-                                        transfer = transfer + map;
+                                        n1++;
+                                    } else
                                         dataReturn(transfer);
-                                    }
                              });
 
 
                 } else if(arrv[0].endsWith('diagnosen')) {
+                          var transfer = '';
+                          var n = 0;
+                          var n1 = 0;
 
                              await collection
                                      .find({$or: [{ICD10: {$regex:arrv[2]}}, {Diagnose: {$regex:arrv[2]}}]},{ _id: 0 })
                                      .forEach(function(result){
                                               if(result != null) {
+                                                 if(n1 === 0)
+                                                    for(k in result) if(k !== '_id') n++;
                                                  transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
-                                                 dataReturn(transfer);
-                                              }
+
+                                                 if(n1 === n -1)
+                                                    dataReturn(transfer);
+
+                                                 n1++;
+                                              } else
+                                                   dataReturn(transfer);
                                      });
 
 
                 } else if(arrv[0].endsWith('persSearch')) {
                          var transfer = '';
+                         var n = 0;
+                         var n1 = 0;
 
                          var st = '';
                          var str = arrv[2] + '.' +arrk[3];
@@ -676,8 +772,12 @@ async function read_write_Comments (collection) {
                              await collection
                                      .find({ [str]: arrv[3] })
                                      .forEach(function(data) {
+
                                           if(data != null) {
-                                              for(var i in data){
+                                              if(n1 === 0)
+                                                 for(k in result) if(k !== '_id') n++;
+
+                                              for(var i in data) {
                                                   var key = i;
                                                   var val = data[i];
 
@@ -685,16 +785,21 @@ async function read_write_Comments (collection) {
                                                      st = JSON.stringify(val.map(function(item) {return [item.Autorisiert_von_Name, item.PatName, item.PatVersicherungsNummer, item.Typ].join('°');})).replace('[','').replace(']','').replaceAll('"','');
                                                   }
                                               }
-                                          } else  {
-                                              var ges = st.split(',');
+                                              if(n1 === n -1) {
+                                                 var ges = st.split(',');
 
-                                              for(var i=0;i<ges.length;i++)
-                                                  if(ges[i].includes(arrv[3])) {
-                                                     transfer = transfer + ges[i] + '-->';
-                                                  }
+                                                 for(var i=0;i<ges.length;i++)
+                                                     if(ges[i].includes(arrv[3])) {
+                                                        transfer = transfer + ges[i] + '-->';
+                                                     }
 
+                                                 dataReturn(transfer);
+                                              }
+                                              n1++;
+
+                                          } else
                                               dataReturn(transfer);
-                                          }
+
                                      });
 
                 }
@@ -708,6 +813,6 @@ async function read_write_Comments (collection) {
 }
 
 async function dataReturn (trans) {
-       console.dir('---'+trans+'---');
+       //console.dir(trans);
        await response.status(200).json({body: JSON.stringify(trans)});
 }
