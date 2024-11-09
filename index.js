@@ -499,6 +499,7 @@ async function read_write_Comments (collection) {
 
                                             if (n1 > 2  && n1 < 15) {
                                                  transfer = transfer +k+"---"+result[k]+'°';
+
                                             }
                                             else if(n1 >= 15)  {
 
@@ -595,16 +596,13 @@ async function read_write_Comments (collection) {
 
                     transfer = "";
                     var n = 0;
-                    var n1 = 0;
 
-                    await collection
-                          .find( {[arrk[2]]: arrv[2]})
-                          .forEach(function(data){
+
+                    var cursor = await collection
+                                           .find( {[arrk[2]]: arrv[2]}).toArray();
+                        cursor.forEach(function(data){
 
                                  if(data != null) {
-
-                                      if(n1 === 0)
-                                         for(k in data) if(k !== '_id') n++;
 
                                       for(var i in data){
                                           var key = i;
@@ -629,57 +627,54 @@ async function read_write_Comments (collection) {
 
                                       }
 
-                                       if(n1 === n -1)
-                                             dataReturn(transfer);
-                                    n1++;
+                                      if(n === cursor.length -1)
+                                         dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
+
+                                    n++;
                                  } else
                                        dataReturn(transfer);
 
-                          });
+                        });
 
 
                 } else if(arrv[0].endsWith('pat')) {
 
                     transfer = "";
                     var n = 0;
-                    var n1 = 0;
 
-                    await collection
-                          .find({VersicherungsNummer: arrv[2]})
-                          .forEach(function(result){
+                    var cursor = await collection
+                                         .find({VersicherungsNummer: arrv[2]}).toArray();
+                        cursor.forEach(function(result){
 
                                  if(result != null) {
-                                    if(n1 === 0)
-                                       for(k in result) if(k !== '_id') n++;
 
                                     transfer =  transfer + result.VersicherungsStatus+'°'+result.Name+'°'+result.Geburtsdatum+'°'+result.PLZWohnort+ '-->';
 
-                                    if(n1 === n -1)
-                                       dataReturn(transfer);
-                                    n1++;
+                                    if(n === cursor.length -1)
+                                        dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
+
+                                   n++;
                                  } else
                                        dataReturn(transfer);
 
-                          });
+                        });
 
                 } else if(arrv[0].endsWith('plz')) {
 
                     transfer = "";
                     var n = 0;
-                    var n1 = 0;
 
-                    await collection
-                          .find({ PLZ_Ort: {$regex: arrv[2], $options: "i" } })
-                          .forEach(function(result){
+                    cursor = await collection
+                                    .find({ PLZ_Ort: {$regex: arrv[2], $options: "i" } }).toArray();
+                    cursor.forEach(function(result){
 
                                  if(result != null) {
-                                    if(n1 === 0)
-                                       for(k in result) if(k !== '_id') n++;
-
                                     transfer =  transfer + result.PLZ_Ort + '-->';
-                                    if(n1 === n -1)
-                                       dataReturn(transfer);
-                                    n1++;
+
+                                    if(n === cursor.length -1)
+                                       dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
+
+                                  n++;
                                  } else
                                        dataReturn(transfer);
                           });
@@ -688,78 +683,66 @@ async function read_write_Comments (collection) {
 
                     transfer = "";
                     var n = 0;
-                    var n1 = 0;
 
-                    await collection
-                          .find({isActive: 'true', Addresse: {$regex: arrv[2], $options: "i" }, Qualifikation: {$regex: arrv[3], $options: "i" } })
-                          .forEach(function(result) {
 
-                                if(result != null) {
-                                   if(n1 === 0)
-                                      for(k in result) if(k !== '_id') n++;
+                    var cursor = await collection
+                          .find({isActive: 'true', [arrk[2]]: {$regex: arrv[2], $options: "i" }, [arrk[3]]: {$regex: arrv[3], $options: "i" } }).toArray();
 
-                                   transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
-                                   if(n1 === n -1)
-                                      dataReturn(transfer);
-                                   n1++;
-                                } else
-                                      dataReturn(transfer);
+                        cursor.forEach(function(result) {
+
+                                   if(result != null) {
+
+                                        transfer =  transfer + result.Name +'°'+  result.Tel +'°'+ result.Addresse +'°'+ result.Kassenzulassung +'°'+ result.Qualifikation + '-->';
+
+                                        if(n === cursor.length -1)
+                                           dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
+
+                                      n++;
+                                   } else
+                                         dataReturn(transfer);
 
                           });
 
                 } else if(arrv[0].endsWith('readKalData')) {
 
-                    var transfer = '';
-                    var n = 0;
-                    var n1 = 0;
+                    transfer = "";
 
-                       await collection
-                             .find({[arrk[2]]: arrv[2]})
-                             .forEach(function(data){
-                                    if(data != null) {
-                                        if(n1 === 0)
-                                           for(k in result) if(k !== '_id') n++;
+                         await collection
+                               .find({[arrk[2]]: arrv[2]})
+                               .forEach(function(data){
 
-                                        for(var i in data) {
-                                             var key = i;
-                                             var val = data[i];
-                                             if(key == 'Name')
-                                                transfer = transfer + val + '-->';
-                                             if(key == 'KalenderBlatt') {
-                                               var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
+                                      for(var i in data){
+                                           var key = i;
+                                           var val = data[i];
+                                           if(key == 'Name')
+                                              transfer = transfer + val + '-->';
+                                           if(key == 'KalenderBlatt') {
+                                             var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
 
-                                             }
-                                        }
-                                        if(n1 === n -1)
-                                           dataReturn(transfer + map);
+                                           }
+                                      }
 
-                                        n1++;
-                                    } else
-                                        dataReturn(transfer);
-                             });
-
+                                   transfer = transfer + map;
+                                   dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
+                               })
+                               .catch(err=>console.log('insert failed: '+err))
 
                 } else if(arrv[0].endsWith('diagnosen')) {
-                          var transfer = '';
+                          transfer = '' ;
                           var n = 0;
-                          var n1 = 0;
+                          var cursor = await collection
+                                                .find({$or: [{ICD10: {$regex:arrv[2]}}, {Diagnose: {$regex:arrv[2]}}]},{ _id: 0 }).toArray();
 
-                             await collection
-                                     .find({$or: [{ICD10: {$regex:arrv[2]}}, {Diagnose: {$regex:arrv[2]}}]},{ _id: 0 })
-                                     .forEach(function(result){
-                                              if(result != null) {
-                                                 if(n1 === 0)
-                                                    for(k in result) if(k !== '_id') n++;
-                                                 transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
+                              cursor.forEach(function(result){
 
-                                                 if(n1 === n -1)
-                                                    dataReturn(transfer);
-
-                                                 n1++;
-                                              } else
-                                                   dataReturn(transfer);
-                                     });
-
+                                         if(result != null) {
+                                            transfer =  transfer + result.ICD10 +'°'+  result.Diagnose + '-->';
+                                            if(n === cursor.length -1)
+                                                dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
+                                            n++;
+                                         } else
+                                            dataReturn(transfer);
+                              })
 
                 } else if(arrv[0].endsWith('persSearch')) {
                          var transfer = '';
@@ -793,7 +776,7 @@ async function read_write_Comments (collection) {
                                                         transfer = transfer + ges[i] + '-->';
                                                      }
 
-                                                 dataReturn(transfer);
+                                                 dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
                                               }
                                               n1++;
 
