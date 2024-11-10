@@ -747,47 +747,36 @@ async function read_write_Comments (collection) {
                 } else if(arrv[0].endsWith('persSearch')) {
                          var transfer = '';
                          var n = 0;
-                         var n1 = 0;
 
-                         var st = '';
+
                          var str = arrv[2] + '.' +arrk[3];
 
-                             await collection
-                                     .find({ [str]: arrv[3] })
-                                     .forEach(function(data) {
+                         var cursor = await collection
+                                              .find({ [str]: arrv[3] }).toArray();
+                             cursor.forEach(data => {
 
                                           if(data != null) {
-                                              if(n1 === 0)
-                                                 for(k in result) if(k !== '_id') n++;
 
                                               for(var i in data) {
                                                   var key = i;
                                                   var val = data[i];
-
+                                                  console.dir(key+'---'+val);
                                                   if(key == arrv[2]) {
-                                                     st = JSON.stringify(val.map(function(item) {return [item.Autorisiert_von_Name, item.PatName, item.PatVersicherungsNummer, item.Typ].join('°');})).replace('[','').replace(']','').replaceAll('"','');
+                                                     var map = val.map(item => item.Autorisiert_von_Name+'°'+item.PatName+'°'+item.PatVersicherungsNummer+'°'+item.Typ +'-->');
                                                   }
                                               }
-                                              if(n1 === n -1) {
-                                                 var ges = st.split(',');
 
-                                                 for(var i=0;i<ges.length;i++)
-                                                     if(ges[i].includes(arrv[3])) {
-                                                        transfer = transfer + ges[i] + '-->';
-                                                     }
-
+                                              if(n === cursor.length -1) {
+                                                 transfer = transfer + map;
                                                  dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
                                               }
-                                              n1++;
-
+                                             n++;
                                           } else
                                               dataReturn(transfer);
 
-                                     });
+                             });
 
                 }
-
-
 
             } catch (error) {
                     response.status(400).json({ error: error });
