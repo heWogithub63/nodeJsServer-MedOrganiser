@@ -191,6 +191,56 @@ function getRandomInt(min, max) {
           return erg;
 }
 
+async function getPasswort(kindOfPersonal, VerNr) {
+
+          if(kindOfPersonal.startsWith('Medizinisches') && kindOfPersonal.endsWith('Typ I')) {
+              var ret = 'nothing found';
+              var pointer = await collection_1
+                                     .find({VersicherungsNummer: VerNr}).toArray();
+                  pointer.forEach( data => {
+
+                           if(data != null) {
+                              for (k in data) {
+
+                                 if(k === 'Passwort') {
+                                    ret = data[k];
+                                    break;
+                                 }
+                              }
+
+                           }
+
+                  });
+              return ret;
+          } else {
+              var pointer = await collection_3
+                                     .find({PatVersicherungsNummer: VerNr}).toArray();
+                  pointer.forEach( data => {
+                           if(data != null) {
+                               if(data.Passwort !== 'undefined') {
+                                   return data.Passwort;
+                               }  else
+                                     return '';
+                           }
+                  });
+          }
+
+}
+
+async function setPasswort(kindOfPersonal, VerNr, password) {
+
+          if(kindOfPersonal.startsWith('Medizinisches') && kindOfPersonal.endsWith('Typ I')) {
+              await collection_1
+                          .updateOne({VersicherungsNummer: VerNr}, {$set: {Passwort: password}});
+
+          } else {
+              await collection_3
+                           .updateOne({VersicherungsNummer: VerNr}, {$set: {Passwort: password}});
+
+          }
+
+}
+
 async function read_write_Comments (collection) {
 
       if(arrv[0].startsWith('Deploy')) {
@@ -278,30 +328,10 @@ async function read_write_Comments (collection) {
                        }
 
                } else if(arrv[0].endsWith('dataChanged')) {
-                       var AktivStatus = '';
 
-                       if("AktivStatus" in obj) {
-                            AktivStatus = obj.AktivStatus;
-
-                                 if(AktivStatus != 'Patient') {
-                                      if (AktivStatus.startsWith('MedizinischesPersonal')) {
-
-                                           next = false;
-
-                                           await collection_1
-                                                    .findOne({$and: [{[arrk[3]]: {$regex: arrv[3].substring(0,arrv[3].indexOf(' '))}}, {[arrk[3]]: {$regex: arrv[3].substring(arrv[3].indexOf(' ')+1)}}]})
-                                                    .then(data=> {
-                                                                  if(data != null) {
-                                                                     isPersonal = 'Arzt'
-                                                                     next = true;
-                                                                  } else {
-                                                                      obj.AktivStatus = 'Patient';
-                                                                      next = true;
-                                                                  }
-                                                             });
-                                      } else
-                                         obj.AktivStatus = 'Patient';
-                                 }
+                       if(obj.Passwort !== null && obj.AktivStatus !== 'Patient') {
+                             setPasswort(obj.AktivStatus, obj.VersicherungsNummer, obj.Passwort);
+                             delete obj.Passwort;
                        }
 
                        delete obj.Caller;
@@ -483,25 +513,32 @@ async function read_write_Comments (collection) {
 
                     transfer = "";
                     var n = 0;
-                    var n1 = 0;
 
-                    await collection
-                          .find({[arrk[2]]: arrv[2]})
-                          .forEach(result => {
+
+                    var cursor = await collection
+                                           .find({[arrk[2]]: arrv[2]}).toArray();
+                        cursor.forEach(result => {
 
                                     if(result != null) {
 
-                                        if(n1 === 0)
-                                           for(k in result)
-                                               if(k !== '_id') n++;
-
                                         for(k in result) {
 
-                                            if (n1 > 2  && n1 < 15) {
+                                            if (n > 2  && n < 15) {
+
                                                  transfer = transfer +k+"---"+result[k]+'°';
 
+                                                 if(arrv[0].includes('-dAe-') && k === 'AktivStatus' && result[k] !== 'Patient') {
+
+                                                    getPasswort(result[k], arrv[2]).then(function(back) {
+                                                          transfer = transfer + 'Passwort---' + back;
+                                                          if(back != null)
+                                                             dataReturn(transfer);
+                                                        });
+
+                                                 }
+
                                             }
-                                            else if(n1 >= 15)  {
+                                            else if(n >= 15)  {
 
                                                      transfer = transfer.substring(0,transfer.length -1) +'-->'+k+'---';
                                                      Object.keys(result[k]).forEach((j, l) => {
@@ -510,10 +547,7 @@ async function read_write_Comments (collection) {
                                                 transfer = transfer +'°';
                                             }
 
-                                           
-                                           if(n1 === n -1)
-                                                   dataReturn(transfer);
-                                          n1++;
+                                          n++;
 
                                         }
 
@@ -760,7 +794,7 @@ async function read_write_Comments (collection) {
                                               for(var i in data) {
                                                   var key = i;
                                                   var val = data[i];
-                                                  console.dir(key+'---'+val);
+
                                                   if(key == arrv[2]) {
                                                      var map = val.map(item => item.Autorisiert_von_Name+'°'+item.PatName+'°'+item.PatVersicherungsNummer+'°'+item.Typ +'-->');
                                                   }
