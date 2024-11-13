@@ -194,6 +194,7 @@ function getRandomInt(min, max) {
 async function getPasswort(kindOfPersonal, VerNr) {
 
           if(kindOfPersonal.startsWith('Medizinisches') && kindOfPersonal.endsWith('Typ I')) {
+
               var ret = 'nothing found';
               var pointer = await collection_1
                                      .find({VersicherungsNummer: VerNr}).toArray();
@@ -213,16 +214,22 @@ async function getPasswort(kindOfPersonal, VerNr) {
                   });
               return ret;
           } else {
+
+              var ret = 'nothing found';
               var pointer = await collection_3
                                      .find({PatVersicherungsNummer: VerNr}).toArray();
                   pointer.forEach( data => {
                            if(data != null) {
-                               if(data.Passwort !== 'undefined') {
-                                   return data.Passwort;
-                               }  else
-                                     return '';
+                               for (k in data) {
+
+                                  if(k === 'Passwort') {
+                                     ret = data[k];
+                                     break;
+                                  }
+                               }
                            }
                   });
+              return ret;
           }
 
 }
@@ -518,7 +525,7 @@ async function read_write_Comments (collection) {
                     var cursor = await collection
                                            .find({[arrk[2]]: arrv[2]}).toArray();
                         cursor.forEach(result => {
-
+                                   
                                     if(result != null) {
                                         if(n === 0)
                                            for(k in result)  n1++;
@@ -533,8 +540,7 @@ async function read_write_Comments (collection) {
 
                                                     getPasswort(result[k], arrv[2]).then(function(back) {
                                                           transfer = transfer + 'Passwort---' + back;
-                                                          if(back != null)
-                                                             dataReturn(transfer);
+                                                          dataReturn(transfer);
                                                         });
 
                                                  }
