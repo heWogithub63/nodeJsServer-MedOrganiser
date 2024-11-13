@@ -336,7 +336,7 @@ async function read_write_Comments (collection) {
 
                } else if(arrv[0].endsWith('dataChanged')) {
 
-                       if(obj.Passwort !== null && obj.AktivStatus !== 'Patient') {
+                       if(arrv[0].includes('-dAe-') && obj.Passwort !== null && obj.AktivStatus !== 'Patient') {
                              setPasswort(obj.AktivStatus, obj.VersicherungsNummer, obj.Passwort);
                              delete obj.Passwort;
                        }
@@ -525,7 +525,7 @@ async function read_write_Comments (collection) {
                     var cursor = await collection
                                            .find({[arrk[2]]: arrv[2]}).toArray();
                         cursor.forEach(result => {
-                                   
+
                                     if(result != null) {
                                         if(n === 0)
                                            for(k in result)  n1++;
