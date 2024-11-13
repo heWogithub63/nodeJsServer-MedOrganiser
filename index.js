@@ -513,13 +513,15 @@ async function read_write_Comments (collection) {
 
                     transfer = "";
                     var n = 0;
-
+                    var n1 = 0;
 
                     var cursor = await collection
                                            .find({[arrk[2]]: arrv[2]}).toArray();
                         cursor.forEach(result => {
 
                                     if(result != null) {
+                                        if(n === 0)
+                                           for(k in result)  n1++;
 
                                         for(k in result) {
 
@@ -546,9 +548,11 @@ async function read_write_Comments (collection) {
                                                       });
                                                 transfer = transfer +'°';
                                             }
+                                            
+                                            if(!arrv[0].includes('-dAe-') && n === n1 -1)
+                                               dataReturn(transfer.substring(0,transfer.lastIndexOf('°')));
 
                                           n++;
-
                                         }
 
                                     } else
