@@ -248,6 +248,16 @@ async function setPasswort(kindOfPersonal, VerNr, password) {
 
 }
 
+function isEmpty(obj) {
+  for (const prop in obj) {
+    if (Object.hasOwn(obj, prop)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 async function read_write_Comments (collection) {
 
       if(arrv[0].startsWith('Deploy')) {
@@ -521,50 +531,49 @@ async function read_write_Comments (collection) {
                     transfer = "";
                     var n = 0;
                     var n1 = 0;
-
                     var cursor = await collection
                                            .find({[arrk[2]]: arrv[2]}).toArray();
-                        cursor.forEach(result => {
 
-                                    if(result != null) {
-                                        if(n === 0)
-                                           for(k in result)  n1++;
+                        if(!isEmpty(cursor)) {
 
-                                        for(k in result) {
+                            cursor.forEach(result => {
+                                for(var k in result) n1++;
+                                for(k in result) {
 
-                                            if (n > 2  && n < 15) {
+                                    if (n > 2  && n < 15) {
 
-                                                 transfer = transfer +k+"---"+result[k]+'°';
+                                         transfer = transfer +k+"---"+result[k]+'°';
 
-                                                 if(arrv[0].includes('-dAe-') && k === 'AktivStatus' && result[k] !== 'Patient') {
+                                         if(arrv[0].includes('-dAe-') && k === 'AktivStatus' && result[k] !== 'Patient') {
 
-                                                    getPasswort(result[k], arrv[2]).then(function(back) {
-                                                          transfer = transfer + 'Passwort---' + back;
-                                                          dataReturn(transfer);
-                                                        });
+                                            getPasswort(result[k], arrv[2]).then(function(back) {
 
-                                                 }
+                                                  transfer = transfer + 'Passwort---' + back;
+                                                  dataReturn(transfer);
+                                                });
 
-                                            }
-                                            else if(n >= 15)  {
+                                         }
 
-                                                     transfer = transfer.substring(0,transfer.length -1) +'-->'+k+'---';
-                                                     Object.keys(result[k]).forEach((j, l) => {
-                                                           transfer = transfer+ JSON.stringify(result[k][j]) +'^';
-                                                      });
-                                                transfer = transfer +'°';
-                                            }
-                                            
-                                            if(!arrv[0].includes('-dAe-') && n === n1 -1)
-                                               dataReturn(transfer.substring(0,transfer.lastIndexOf('°')));
+                                    }
+                                    else if(n >= 15)  {
 
-                                          n++;
-                                        }
+                                             transfer = transfer.substring(0,transfer.length -1) +'-->'+k+'---';
+                                             Object.keys(result[k]).forEach((j, l) => {
+                                                   transfer = transfer+ JSON.stringify(result[k][j]) +'^';
+                                              });
+                                        transfer = transfer +'°';
+                                    }
 
-                                    } else
-                                        dataReturn(transfer);
+                                    if(!arrv[0].includes('-dAe-') && n === n1 -1)
+                                        dataReturn(transfer.substring(0,transfer.lastIndexOf('°')));
 
-                          });
+                                  n++;
+                                }
+
+                            });
+
+                        }  else
+                             dataReturn(transfer);
 
                 } else if(arrv[0].endsWith('personalDaten')) {
 
@@ -572,69 +581,72 @@ async function read_write_Comments (collection) {
                     var n = 0;
                     var n1 = 0;
 
-                       await collection
-                                 .findOne( {[arrk[2]]: arrv[2]} )
-                                 .then(data => {
+                    var cursor = await collection
+                                          .find( {[arrk[2]]: arrv[2]} ).toArray();
 
-                                       if(data != null) {
-                                           if(n1 === 0)
-                                              for(k in data) if(k != '_id' && k != 'isActive') n++;
+                        if(!isEmpty(cursor))  {
 
-                                           for(var i in data) {
-                                               var key = i;
-                                               var val = data[i];
+                            cursor.forEach (data => {
+                                 for(var i in data) n1++;
+                                 for(var i in data) {
+                                     var key = i;
+                                     var val = data[i];
 
-                                               if(key != '_id' && key != 'isActive') {
-                                                     transfer = transfer + key +'---'+ val +'°';
-                                                     n1++;
-                                               }
-                                           }
+                                     if(key != '_id' && key != 'isActive') {
+                                           transfer = transfer + key +'---'+ val +'°';
 
-                                           if(n1 === n)
-                                                  dataReturn(transfer);
+                                     }
+                                    n++;
+                                 }
 
-                                       } else {
+                                 if(n === n1)
+                                    dataReturn(transfer.substring(0,transfer.lastIndexOf('°')));
+                            });
 
-                                           var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
+                        } else {
 
-                                           var key = fS+'.PatVersicherungsNummer';
-                                           var key1 = fS+'.$';
-                                           var map;
+                            var fS = arrv[3].substring(0,arrv[3].indexOf(' '));
 
-                                           collection_3
-                                               .find({ [key]:  arrv[2] })
-                                               .forEach( result => {
+                            var key = fS+'.PatVersicherungsNummer';
+                            var key1 = fS+'.$';
+                            var map;
 
-                                                  if (result != null)   {
-                                                      if(n1 === 0)
-                                                         for(k in result) if(k !== '_id') n++;
+                            var cursor = await collection_3
+                                                .find({ [key]:  arrv[2] }).toArray();
 
-                                                      for(var i in result) {
-                                                          var key = i;
-                                                          var val = result[i];
+                                if(!isEmpty(cursor)) {
 
-                                                          if(key == fS) {
-                                                             map = val.map(item => 'PatName---'+item.PatName+'°'+'PatVersicherungsNummer---'+item.PatVersicherungsNummer+'°'+'Autorisiert_von_Name---'+
-                                                                                    item.Autorisiert_von_Name+'°'+'Autorisiert_von_VersicherungsNummer---'+item.Autorisiert_von_VersicherungsNummer);
-                                                          }
-                                                      }
+                                    cursor.forEach( result => {
 
-                                                      if(n1 === n -1) {
+                                        for(var i in result) {
+                                            var key = i;
+                                            var val = result[i];
 
-                                                         var arrStr = JSON.stringify(map);
-                                                             arrStr = arrStr.replace('["','').replace('"]','');
+                                            if(key == fS) {
+                                               map = val.map(item => 'PatName---'+item.PatName+'°'+'PatVersicherungsNummer---'+item.PatVersicherungsNummer+'°'+'Autorisiert_von_Name---'+
+                                                                      item.Autorisiert_von_Name+'°'+'Autorisiert_von_VersicherungsNummer---'+item.Autorisiert_von_VersicherungsNummer);
+                                            }
+                                        }
 
-                                                             if(arrStr.includes(arrv[2]))
-                                                                transfer = transfer + arrStr +'-->';
+                                        if(n === cursor.length -1) {
 
-                                                         dataReturn(transfer);
-                                                      }
-                                                     n1++;
-                                                  } else
-                                                      dataReturn(transfer);
-                                               });
-                                       }
-                                 });
+                                           var arrStr = JSON.stringify(map);
+                                               arrStr = arrStr.replace('["','').replace('"]','');
+
+                                               if(arrStr.includes(arrv[2]))
+                                                  transfer = transfer + arrStr +'-->';
+
+                                           dataReturn(transfer);
+                                        }
+
+                                       n++;
+
+                                    });
+
+                                } else
+                                    dataReturn(transfer);
+
+                        }
 
                 } else if(arrv[0].endsWith('patDiagnostik')) {
 
@@ -829,6 +841,6 @@ async function read_write_Comments (collection) {
 }
 
 async function dataReturn (trans) {
-       //console.dir(trans);
+       //console.dir('---'+trans+'....');
        await response.status(200).json({body: JSON.stringify(trans)});
 }
