@@ -242,7 +242,7 @@ async function setPasswort(kindOfPersonal, VerNr, password) {
 
           } else {
               await collection_3
-                           .updateOne({VersicherungsNummer: VerNr}, {$set: {Passwort: password}});
+                           .updateOne({PatVersicherungsNummer: VerNr}, {$set: {Passwort: password}});
 
           }
 
