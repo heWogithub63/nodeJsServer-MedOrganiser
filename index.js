@@ -216,16 +216,24 @@ async function getPasswort(kindOfPersonal, VerNr) {
           } else {
 
               var ret = 'nothing found';
+              var key = kindOfPersonal.substring(0, kindOfPersonal.indexOf(' '))+'.PatVersicherungsNummer';
+              var kindOf = kindOfPersonal.substring(0,kindOfPersonal.indexOf(' '));
+
               var pointer = await collection_3
-                                     .find({PatVersicherungsNummer: VerNr}).toArray();
+                                     .find({[key]: VerNr}).toArray();
                   pointer.forEach( data => {
                            if(data != null) {
                                for (k in data) {
+                                    var val = data[k];
+                                    if(k === kindOf)
+                                       for(j in val) {
+                                           var val1 = val[j];
+                                           for (i in val1)
+                                               if(i === 'Passwort') {
+                                                  ret = val1[i];
+                                               }
+                                       }
 
-                                  if(k === 'Passwort') {
-                                     ret = data[k];
-                                     break;
-                                  }
                                }
                            }
                   });
@@ -241,8 +249,11 @@ async function setPasswort(kindOfPersonal, VerNr, password) {
                           .updateOne({VersicherungsNummer: VerNr}, {$set: {Passwort: password}});
 
           } else {
+              var key = kindOfPersonal.substring(0, kindOfPersonal.indexOf(' '))+'.PatVersicherungsNummer';
+              var key1 = kindOfPersonal.substring(0, kindOfPersonal.indexOf(' '))+'.$.Passwort';
+
               await collection_3
-                           .updateOne({PatVersicherungsNummer: VerNr}, {$set: {Passwort: password}});
+                           .updateOne({[key]: VerNr}, {$set: {[key1]: password}});
 
           }
 
@@ -347,8 +358,9 @@ async function read_write_Comments (collection) {
                } else if(arrv[0].endsWith('dataChanged')) {
 
                        if(arrv[0].includes('-dAe-') && obj.Passwort !== null && obj.AktivStatus !== 'Patient') {
-                             setPasswort(obj.AktivStatus, obj.VersicherungsNummer, obj.Passwort);
-                             delete obj.Passwort;
+                             console.dir(obj.AktivStatus+'----'+obj.VersicherungsNummer+'----'+obj.Passwort);
+                             await setPasswort(obj.AktivStatus, obj.VersicherungsNummer, obj.Passwort)
+                                         .than(() => {delete obj.Passwort});
                        }
 
                        delete obj.Caller;
