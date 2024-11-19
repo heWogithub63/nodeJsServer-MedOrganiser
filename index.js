@@ -844,6 +844,26 @@ async function read_write_Comments (collection) {
 
                              });
 
+                } else if(arrv[0].endsWith('MonatsAbrechnung')) {
+                         var transfer = '';
+                         var n = 0;
+
+                         var Abr = await collection
+                                            .find({[arrk[2]]: arrv[2], 'AbrechnungsDetails.Rechnung_.Rechnungsdatum': {$gt: parseInt(arrv[3]), $lt: parseInt(arrv[4])}},
+                                                        {'AbrechnungsDetails.Rechnung_.$': 1, _id:0}).toArray();
+
+                                   await Abr.forEach(item => {
+
+                                                            for(var i in item)for(var i1 in item[i])for(var i2 in item[i][i1]) var Abr1 = item[i][i1][i2];
+
+                                                            Abr1.forEach(item1 => {transfer = transfer + JSON.stringify(item1)+'°'});
+                                                            transfer = transfer.substring(0,transfer.lastIndexOf('°')) +'-->';
+
+                                                            if(n === Abr.length -1)
+                                                               dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
+                                                        n++;
+                                                    })
+
                 }
 
             } catch (error) {
