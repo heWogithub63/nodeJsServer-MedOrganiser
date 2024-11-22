@@ -479,48 +479,29 @@ async function read_write_Comments (collection) {
                    delete obj.Caller;
                    delete obj.Collection;
 
-                   await database.listCollections({name: arrv[1]})
-                       .next(function(err, collinfo) {
-                           if (collinfo) {
-                               collection
-                                    .findOne({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]]: arrv[3]}]})
-                                    .then(result=> {
+                       var cursor = await collection
+                                             .findOne({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]]: arrv[3]}]}).toArray();
+                           if(!isEmpty(cursor)) {
 
-                                          if(result !== null)   {
-                                               var ar1 = JSON.stringify(arrv[5]);
-                                                   ar1 = ar1.substring(1,ar1.length -1);
+                                     var ar1 = JSON.stringify(arrv[5]);
+                                         ar1 = ar1.substring(1,ar1.length -1);
 
-                                               arrv[5] = JSON.parse(ar1);
+                                     arrv[5] = JSON.parse(ar1);
 
-                                               collection
-                                                    .updateOne({[arrk[2]]: arrv[2]}, { $push: {[arrk[5]]: arrv[5]}})
-                                                    .then(data=> {
+                               await collection
+                                          .updateOne({[arrk[2]]: arrv[2]}, { $push: {[arrk[5]]: arrv[5]}});
 
-                                                    })
-                                          } else {
-                                             collection
-                                                 .insertOne(obj)
-                                                 .then(data=> {
-
-                                                 })
-                                          }
-                                    }) ;
                            } else {
-                               collection
-                                     .insertOne(obj)
-                                     .then(data=> {
+                               await collection
+                                         .insertOne(obj);
+                           }
 
-                                     })
-                           };
-                       });
+                       await collection_1
+                             .updateOne({$or: [{[arrk[3]]: arrv[3]}, {Name: {$regex: arrv[2].substring(arrv[2].lastIndexOf(' '))}}]}, {$set: {[arrk[4]]: arrv[4]}})
+                             .then(data=> {
 
-
-                   await collection_1
-                         .updateOne({$or: [{[arrk[3]]: arrv[3]}, {Name: {$regex: arrv[2].substring(arrv[2].lastIndexOf(' '))}}]}, {$set: {[arrk[4]]: arrv[4]}})
-                         .then(data=> {
-
-                                        transfer = 'Erfolgreicher Eintrag der AbrechnungsDaten:';
-                         })
+                                            transfer = 'Erfolgreicher Eintrag der AbrechnungsDaten:';
+                             })
 
 
                }
@@ -847,22 +828,51 @@ async function read_write_Comments (collection) {
                 } else if(arrv[0].endsWith('MonatsAbrechnung')) {
                          var transfer = '';
                          var n = 0;
+                         var n1 = 0;
 
                          var Abr = await collection
-                                            .find({[arrk[2]]: arrv[2], 'AbrechnungsDetails.Rechnung_.Rechnungsdatum': {$gt: parseInt(arrv[3]), $lt: parseInt(arrv[4])}},
-                                                        {'AbrechnungsDetails.Rechnung_.$': 1, _id:0}).toArray();
+                                            .find({[arrk[2]]: arrv[2]}).toArray();
 
-                                   await Abr.forEach(item => {
+                                   await Abr.forEach(data => {
+                                                   if(data != null) {
 
-                                                            for(var i in item)for(var i1 in item[i])for(var i2 in item[i][i1]) var Abr1 = item[i][i1][i2];
+                                                       for(var i in data) {
+                                                           var key = i;
+                                                           var val = data[i];
 
-                                                            Abr1.forEach(item1 => {transfer = transfer + JSON.stringify(item1)+'°'});
-                                                            transfer = transfer.substring(0,transfer.lastIndexOf('°')) +'-->';
+                                                           if(key == 'AbrechnungsDetails') {
+                                                               for(var j in val) n1++;
+                                                               for(var j in val) {
+                                                                   var k1 = j;
+                                                                   var v1 = val[j];
 
-                                                            if(n === Abr.length -1)
-                                                               dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
-                                                        n++;
-                                                    })
+                                                                   for(var k in v1) {
+                                                                       var k2 = k;
+                                                                       var v2 = v1[k];
+
+                                                                       for(var h in v2) {
+                                                                           var k3 = h;
+                                                                           var v3 = v2[h];
+                                                                           if(v3.Rechnungsdatum != null && parseInt(v3.Rechnungsdatum) >= parseInt(arrv[3]) &&
+                                                                                                           parseInt(v3.Rechnungsdatum) <= parseInt(arrv[4]))
+
+                                                                              transfer = transfer + JSON.stringify(v2) +'-->';
+                                                                       }
+
+                                                                     n++;
+                                                                   }
+
+                                                                 if(n === n1) {
+                                                                    transfer = transfer.replaceAll('},','}°');
+                                                                    dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
+                                                                 }
+                                                               }
+                                                           }
+                                                       }
+
+                                                   } else
+                                                       dataReturn(transfer);
+                                          })
 
                 }
 
