@@ -480,7 +480,8 @@ async function read_write_Comments (collection) {
                    delete obj.Collection;
 
                        var cursor = await collection
-                                             .findOne({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]]: arrv[3]}]}).toArray();
+                                             .find({$and: [{[arrk[2]]: arrv[2]}, {[arrk[3]]: arrv[3]}]}).toArray();
+
                            if(!isEmpty(cursor)) {
 
                                      var ar1 = JSON.stringify(arrv[5]);
