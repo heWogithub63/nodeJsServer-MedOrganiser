@@ -356,13 +356,11 @@ async function read_write_Comments (collection) {
                        }
 
                } else if(arrv[0].endsWith('dataChanged')) {
-
-                       if(arrv[0].includes('-dAe-') && obj.Passwort !== null && obj.AktivStatus !== 'Patient') {
-                             console.dir(obj.AktivStatus+'----'+obj.VersicherungsNummer+'----'+obj.Passwort);
-                             await setPasswort(obj.AktivStatus, obj.VersicherungsNummer, obj.Passwort)
-                                         .than(() => {delete obj.Passwort});
+                       var pswd = '';
+                       if(obj.Passwort != null) {
+                          pswd = obj.Passwort;
+                          delete obj.Passwort;
                        }
-
                        delete obj.Caller;
                        delete obj.Collection;
                        delete obj.VersicherungsNummer;
@@ -371,7 +369,14 @@ async function read_write_Comments (collection) {
 
                        await collection
                                .updateOne( {[arrk[2]]: arrv[2]}, {$set: obj})
+                               .then(data=> {
+                                 
+                                   if(arrv[0].includes('-dAe-') && pswd != '' && obj.AktivStatus !== 'Patient')
+                                      setPasswort(obj.AktivStatus, arrv[2], pswd);
+                                                          
+                               })
                                .catch(err=>console.log('datChanged failed: '+err));
+
 
                        transfer = 'dataChanged successfull';
 
