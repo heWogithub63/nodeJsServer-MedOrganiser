@@ -477,7 +477,14 @@ async function read_write_Comments (collection) {
                    }
                    transfer = 'successfull';
 
-               } else if(arrv[0].endsWith('sendAbr')) {
+               }  else if(arrv[0].endsWith('writeKalHolydayData')) {
+                          await collection
+                                 .updateOne({ [arrk[2]]: arrv[2] }, { $set:{[arrk[3]]: arrv[3]}  })
+                                 .catch(err=>console.log('holydayWrite failed: '+err))
+
+                          transfer = 'holydayWrite successfull';
+
+               }  else if(arrv[0].endsWith('sendAbr')) {
 
                    var next = false;
                    var collexist = false;
@@ -770,6 +777,8 @@ async function read_write_Comments (collection) {
                                            var key = i;
                                            var val = data[i];
                                            if(key == 'Name')
+                                              transfer = transfer + val + '-->';
+                                           if(key == 'Holyday')
                                               transfer = transfer + val + '-->';
                                            if(key == 'KalenderBlatt') {
                                              var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
