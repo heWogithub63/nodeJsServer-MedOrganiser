@@ -779,14 +779,14 @@ async function read_write_Comments (collection) {
                                            if(key == 'Name')
                                               transfer = transfer + val + '-->';
                                            if(key == 'Holyday')
-                                              transfer = transfer + val + '-->';
+                                              var maph = val.map(item => item.HolydayFrom+'°'+item.HolydayTo+ '-->');
                                            if(key == 'KalenderBlatt') {
                                              var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
 
                                            }
                                       }
 
-                                   transfer = transfer + map;
+                                   transfer = transfer + maph + map;
                                    dataReturn(transfer.substring(0,transfer.lastIndexOf('-->')));
                                })
                                .catch(err=>console.log('insert failed: '+err))
