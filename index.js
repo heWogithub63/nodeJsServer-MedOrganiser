@@ -355,6 +355,13 @@ async function read_write_Comments (collection) {
                                         .catch(err=>console.log('insert failed: '+err));
                        }
 
+               } else if(arrv[0].endsWith('ActiveStatus')) {
+                      await collection
+                               .updateOne( {[arrk[2]]: arrv[2]}, {$set: {[arrk[3]]: arrv[3]}})
+                               .then(data=> {
+                                              transfer = 'Erfolgreiche Aenderung des ActiveStatus: VersNr >>' +VersNr +'-->'+obj.AktivStatus})
+                               .catch(err=>console.log('update failed: '+err));
+
                } else if(arrv[0].endsWith('dataChanged')) {
                        var pswd = '';
                        if(obj.Passwort != null) {
@@ -598,7 +605,7 @@ async function read_write_Comments (collection) {
                                      var key = i;
                                      var val = data[i];
 
-                                     if(key != '_id' && key != 'isActive') {
+                                     if(key != '_id') {
                                            transfer = transfer + key +'---'+ val +'°';
 
                                      }
