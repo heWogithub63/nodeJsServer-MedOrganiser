@@ -491,6 +491,13 @@ async function read_write_Comments (collection) {
 
                           transfer = 'holydayWrite successfull';
 
+               }  else if(arrv[0].endsWith('writeKalbreakTimeData')) {
+                          await collection
+                                 .updateOne({ [arrk[2]]: arrv[2] }, { $set:{[arrk[3]]: arrv[3]}  })
+                                 .catch(err=>console.log('breakTimeWrite failed: '+err))
+
+                          transfer = 'breakTimeWrite successfull';
+
                }  else if(arrv[0].endsWith('sendAbr')) {
 
                    var next = false;
