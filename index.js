@@ -792,8 +792,9 @@ async function read_write_Comments (collection) {
                                            var val = data[i];
                                            if(key == 'Name')
                                               transfer = transfer + val + '-->';
-                                           if(key == 'Holyday')
+                                           if(key == 'Holyday' || key == 'Breaktimes')
                                               transfer = transfer + JSON.stringify(val) + '-->';
+
                                            if(key == 'KalenderBlatt') {
                                              var map = val.map(item => item.Patient+'°'+item.TerminiertesDatum+'°'+item.TerminierteUhrzeit+'-->');
 
