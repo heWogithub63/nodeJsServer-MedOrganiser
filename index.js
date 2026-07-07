@@ -9,8 +9,6 @@ const port =  process.env.PORT || 3030;
 const { MongoClient, GridFSBucket } = require('mongodb');
 const fs = require('fs');
 
-const uri = "mongodb+srv://wh:admin01@cluster0.kmwrpfb.mongodb.net/?retryWrites=true&w=majority";
-
 var collection_0;
 var collection_1;
 var collection_2;
@@ -78,7 +76,8 @@ app.post('/medOrganiser',async (req, res) =>{
 
 
 async function requestPostString() {
-        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+        const client = new MongoClient(obj.MongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
         database = client.db("MedOrganiser");
         const collection = database.collection(arrv[1]);
         collection_0 = client.db("MedOrganiser").collection('Patient');
@@ -91,6 +90,7 @@ async function requestPostString() {
 		                  console.log("connection established not successfully");
 		                } else {
 		                  console.log("connection established successfully");
+		                  delete obj.MongoUri;
                                   if(arrv[0] == 'FileDownload')
                                       downloadFile(arrv[1],arrv[2],arrv[3],database);
                                   else if(arrv[0] == 'FileUpload')
@@ -557,43 +557,22 @@ async function read_write_Comments (collection) {
                         if(!isEmpty(cursor)) {
 
                             cursor.forEach(result => {
-                                for(var k in result) n1++;
-                                for(k in result) {
 
-                                    if (n > 2  && n < 15) {
+                                if(arrv[0].includes('-dAe-') && result.AktivStatus !== 'Patient') {
 
-                                         transfer = transfer +k+"---"+result[k]+'°';
+                                   getPasswort(result.AktivStatus, arrv[2]).then(function(back) {
 
-                                         if(arrv[0].includes('-dAe-') && k === 'AktivStatus' && result[k] !== 'Patient') {
+                                            Object.assign(result, {'Passwort': back});
+                                            dataReturn(result);
+                                       });
 
-                                            getPasswort(result[k], arrv[2]).then(function(back) {
-
-                                                  transfer = transfer + 'Passwort---' + back;
-                                                  dataReturn(transfer);
-                                                });
-
-                                         }
-
-                                    }
-                                    else if(n >= 15)  {
-
-                                             transfer = transfer.substring(0,transfer.length -1) +'-->'+k+'---';
-                                             Object.keys(result[k]).forEach((j, l) => {
-                                                   transfer = transfer+ JSON.stringify(result[k][j]) +'^';
-                                              });
-                                        transfer = transfer +'°';
-                                    }
-
-                                    if(!arrv[0].includes('-dAe-') && n === n1 -1)
-                                        dataReturn(transfer.substring(0,transfer.lastIndexOf('°')));
-
-                                  n++;
-                                }
+                                } else
+                                     dataReturn(result);
 
                             });
 
                         }  else
-                             dataReturn(transfer);
+                             dataReturn("no search result");
 
                 } else if(arrv[0].endsWith('personalDaten')) {
 
