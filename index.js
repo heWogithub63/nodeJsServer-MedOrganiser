@@ -62,10 +62,6 @@ app.post('/medOrganiser',async (req, res) =>{
         response = res;
         request = req;
         obj = data;
-        arrk = Object.keys(data);
-        arrv = Object.values(data);
-
-        //console.log("-->"+JSON.stringify(obj));
 
 	    requestPostString().catch(console.error);
 	}
@@ -79,7 +75,9 @@ async function requestPostString() {
 
         const client = new MongoClient(obj.MongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
         database = client.db("MedOrganiser");
-        const collection = database.collection(arrv[1]);
+        const collection = database.collection(obj.Collection);
+
+
         collection_0 = client.db("MedOrganiser").collection('Patient');
         collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
         collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
@@ -87,16 +85,19 @@ async function requestPostString() {
         try {
                 await client.connect((err) => {
 		                if (err) {
-		                  console.log("connection established not successfully");
+		                      console.log("connection established not successfully");
 		                } else {
-		                  console.log("connection established successfully");
-		                  delete obj.MongoUri;
-                                  if(arrv[0] == 'FileDownload')
-                                      downloadFile(arrv[1],arrv[2],arrv[3],database);
-                                  else if(arrv[0] == 'FileUpload')
-                                      uploadFile(arrv[1],arrv[2],arrv[3],database);
-                                  else
-                                      read_write_Comments (collection);
+
+		                      delete obj.MongoUri;
+		                      arrk = Object.keys(obj);
+                              arrv = Object.values(obj);
+
+                                      if(arrv[0] == 'FileDownload')
+                                          downloadFile(arrv[1],arrv[2],arrv[3],database);
+                                      else if(arrv[0] == 'FileUpload')
+                                          uploadFile(arrv[1],arrv[2],arrv[3],database);
+                                      else
+                                          read_write_Comments (collection);
 
 		                }
 		        })
@@ -551,6 +552,7 @@ async function read_write_Comments (collection) {
                     transfer = "";
                     var n = 0;
                     var n1 = 0;
+
                     var cursor = await collection
                                            .find({[arrk[2]]: arrv[2]}).toArray();
 
