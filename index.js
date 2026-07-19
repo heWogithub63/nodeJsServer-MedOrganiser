@@ -856,16 +856,12 @@ async function read_write_Comments (collection) {
                                                                for(var j in val) {
                                                                    var k1 = j;
                                                                    var v1 = val[j];
-                                                                   
                                                                    for(var k in v1) {
                                                                        var k2 = k;
                                                                        var v2 = v1[k];
-
                                                                        if(k2.length > 9 && parseInt(k2.substring(k2.indexOf('_') +1)) >= parseInt(arrv[3]) &&
                                                                                                 parseInt(k2.substring(k2.indexOf('_') +1)) <= parseInt(arrv[4]))
-                                                                          transfer = transfer + JSON.stringify(v2) +'-->';
-                                                                          console.log(transfer);
-
+                                                                          transfer = transfer + JSON.stringify(v2) +'-->';                                                                         
                                                                      n++;
                                                                    }
 
