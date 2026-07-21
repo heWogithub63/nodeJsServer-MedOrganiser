@@ -12,6 +12,8 @@ const fs = require('fs');
 var collection_0;
 var collection_1;
 var collection_2;
+var collection_3;
+var collection_4;
 
 var database;
 var obj;
@@ -82,6 +84,7 @@ async function requestPostString() {
         collection_1 = client.db("MedOrganiser").collection('medEinrichtung');
         collection_2 = client.db("MedOrganiser").collection('PraxisKalender');
         collection_3 = client.db("MedOrganiser").collection('Personal');
+        collection_4 = client.db("MedOrganiser").collection('Identifier');
         try {
                 await client.connect((err) => {
 		                if (err) {
@@ -192,71 +195,38 @@ function getRandomInt(min, max) {
           return erg;
 }
 
-async function getPasswort(kindOfPersonal, VerNr) {
+async function getPasswort(VerNr) {
 
-          if(kindOfPersonal.startsWith('Medizinisches') && kindOfPersonal.endsWith('Typ I')) {
-
-              var ret = 'nothing found';
-              var pointer = await collection_1
-                                     .find({VersicherungsNummer: VerNr}).toArray();
-                  pointer.forEach( data => {
-
-                           if(data != null) {
-                              for (k in data) {
-
-                                 if(k === 'Passwort') {
-                                    ret = data[k];
-                                    break;
-                                 }
-                              }
-
-                           }
-
-                  });
-              return ret;
-          } else {
 
               var ret = 'nothing found';
-              var key = kindOfPersonal.substring(0, kindOfPersonal.indexOf(' '))+'.PatVersicherungsNummer';
-              var kindOf = kindOfPersonal.substring(0,kindOfPersonal.indexOf(' '));
+              var key = 'VersicherungsNr';
+              var key1 = 'Passwort';
 
-              var pointer = await collection_3
-                                     .find({[key]: VerNr}).toArray();
-                  pointer.forEach( data => {
-                           if(data != null) {
-                               for (k in data) {
-                                    var val = data[k];
-                                    if(k === kindOf)
-                                       for(j in val) {
-                                           var val1 = val[j];
-                                           for (i in val1)
-                                               if(i === 'Passwort') {
-                                                  ret = val1[i];
-                                               }
-                                       }
-
-                               }
-                           }
-                  });
+              await collection_4
+                      .findOne({[key]: VerNr})
+                      .then(data=> {
+                            if(data !== null)
+                               ret = data.Passwort;
+                      });
               return ret;
-          }
+
 
 }
 
-async function setPasswort(kindOfPersonal, VerNr, password) {
+async function setPasswort(VerNr, password) {
 
-          if(kindOfPersonal.startsWith('Medizinisches') && kindOfPersonal.endsWith('Typ I')) {
-              await collection_1
-                          .updateOne({VersicherungsNummer: VerNr}, {$set: {Passwort: password}});
 
-          } else {
-              var key = kindOfPersonal.substring(0, kindOfPersonal.indexOf(' '))+'.PatVersicherungsNummer';
-              var key1 = kindOfPersonal.substring(0, kindOfPersonal.indexOf(' '))+'.$.Passwort';
+              await collection_4
+                      .findOne({VersicherungsNr: VerNr})
+                      .then(data=> {
+                            if(data === null)
+                               collection_4
+                                  .insertOne({VersicherungsNr: VerNr, Passwort: password});
+                            else
+                               collection_4
+                                  .updateOne({VersicherungsNr: VerNr}, {$set: {Passwort: password}});
+                      });
 
-              await collection_3
-                           .updateOne({[key]: VerNr}, {$set: {[key1]: password}});
-
-          }
 
 }
 
@@ -379,8 +349,8 @@ async function read_write_Comments (collection) {
                                .updateOne( {[arrk[2]]: arrv[2]}, {$set: obj})
                                .then(data=> {
                                  
-                                   if(arrv[0].includes('-dAe-') && pswd != '' && obj.AktivStatus !== 'Patient')
-                                      setPasswort(obj.AktivStatus, arrv[2], pswd);
+                                   if(arrv[0].includes('-dAe-') && pswd != '')
+                                      setPasswort(arrv[2], pswd);
                                                           
                                })
                                .catch(err=>console.log('datChanged failed: '+err));
@@ -560,9 +530,9 @@ async function read_write_Comments (collection) {
 
                             cursor.forEach(result => {
 
-                                if(arrv[0].includes('-dAe-') && result.AktivStatus !== 'Patient') {
+                                if(arrv[0].includes('-dAe-')) {
 
-                                   getPasswort(result.AktivStatus, arrv[2]).then(function(back) {
+                                   getPasswort(arrv[2]).then(function(back) {
 
                                             Object.assign(result, {'Passwort': back});
                                             dataReturn(result);
