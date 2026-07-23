@@ -366,68 +366,77 @@ async function read_write_Comments (collection) {
                        transfer = 'uploadFile successfull';
 
                }  else if(arrv[0].includes('-pers')) {
-                       delete obj.Caller;
-                       delete obj.Collection;
+                          delete obj.Caller;
+                          delete obj.Collection;
 
-                       var success = false;
-                       var s1 = obj[arrk[2]];
+                          var success = false;
+                          var s1 = obj[arrk[2]];
 
-                       for(var i=0;i<s1.length;i++) {
-                           var s2 = s1[i];
+                          for(var i=0;i<s1.length;i++) {
+                              var s2 = s1[i];
 
-                              if(!success) {
-                                 if(arrv[0].endsWith('Eintrag')) {
-                                    await collection
-                                       .updateOne( {}, {$push: {[arrk[2]]: s2}}, {upsert:true})
-                                       .then(data=> {
-                                                      if(JSON.stringify(data.modifiedCount) == '0') {
-                                                         success = true;
-                                                         collection
-                                                                 .insertOne(obj)
-                                                                 .then(data=> {console.log('Erfolgreicher Erst-Eintrag der PedrsonalDaten'); })
-                                                      } else  {
-                                                                success = true;
-                                                                console.log('Erfolgreiche Addition der PedrsonalDaten');
-                                                      }
-                                                    })
-                                       .catch(err=>console.log('insert failed: '+err));
-                                 } else if(arrv[0].endsWith('Delete')) {
-                                    delete s2.Datum;
+                                 if(!success) {
+                                    if(arrv[0].endsWith('Eintrag')) {
+                                       var count = await collection
+                                                             .findOne({},{_id:0});
+                                           if(count == null) {
+                                                 await collection
+                                                           .insertOne(obj)
+                                                           .then(data=> {
+                                                                  success = true;
+                                                                  //console.log('Erfolgreicher ErstEintrag der PedrsonalDaten');
+                                                                 });
+                                           }  else {
 
-                                    await collection
-                                       .updateOne( {}, {$pull: {[arrk[2]]: s2}}, {upsert:true})
-                                       .then(data=> {
-                                              if(JSON.stringify(data.modifiedCount) == '1') {
-                                                  success = true;
-                                                  console.log('Erfolgreicher Delete der PersonalDaten');
-                                              }
-                                       })
-                                        .catch(err=>console.log('delete failed: '+err));
-                                 }
-                              }
+                                                 await collection
+                                                           .updateOne({}, { $pull: { [arrk[2]]: {PatVersicherungsNummer: s2.PatVersicherungsNummer}}})
+                                                           .then(data=> {
+                                                                  collection
+                                                                     .updateOne({}, { $push: { [arrk[2]]: s2}})
+                                                                  success = true;
+                                                                  //console.log('Erfolgreiche Addition der PedrsonalDaten');
+                                                                 });
 
-                           if(success) {
+                                           }
 
-                                 if(arrv[0].endsWith('Eintrag')) {
-                                    await collection_0
-                                           .updateOne({ $and: [ {Name: s2.Name }, { Geburtsdatum: s2.Geburtsdatum } ] },{ $set: {AktivStatus: arrk[2] + ' Typ ' +s2.Typ}})
-                                           .then(data=> {
-                                                          console.log('Erfolgreicher Eintrag in die PatientenDaten ')})
-                                           .catch(err=>console.log('insert failed: '+err));
-                                 } else   if(arrv[0].endsWith('Delete')) {
 
-                                    await collection_0
-                                           .updateOne({ $and: [ {Name: s2.Name }, { Geburtsdatum: s2.Geburtsdatum } ] },{ $set: {AktivStatus: 'Patient'}})
-                                           .then(data=> {
-                                                          console.log('Erfolgreicher Delete in den PatientenDaten ')})
+                                    } else if(arrv[0].endsWith('Delete')) {
+                                       delete s2.Datum;
+
+                                       await collection
+                                          .updateOne( {}, {$pull: {[arrk[2]]: s2}}, {upsert:true})
+                                          .then(data=> {
+                                                 if(JSON.stringify(data.modifiedCount) == '1') {
+                                                     success = true;
+                                                     //console.log('Erfolgreicher Delete der PersonalDaten');
+                                                 }
+                                          })
                                            .catch(err=>console.log('delete failed: '+err));
+                                    }
                                  }
 
-                              success = false;
-                           }
-                           if(i == s1.length -1)
-                              transfer = 'Erfolgreiche Bearbeitung der Patienten- PersonalDaten -->';
-                       }
+                              if(success) {
+
+                                    if(arrv[0].endsWith('Eintrag')) {
+                                       await collection_0
+                                              .updateOne({ $and: [ {Name: s2.PatName }, { VersicherungsNummer: s2.PatVersicherungsNummer } ] },{ $set: {AktivStatus: arrk[2] + ' Typ ' +s2.Typ}})
+                                              .then(data=> {
+                                                             console.log('Erfolgreicher Eintrag in die PatientenDaten ')})
+                                              .catch(err=>console.log('insert failed: '+err));
+                                    } else   if(arrv[0].endsWith('Delete')) {
+
+                                       await collection_0
+                                              .updateOne({ $and: [ {Name: s2.PatName }, { VersicherungsNummer: s2.PatVersicherungsNummer } ] },{ $set: {AktivStatus: 'Patient'}})
+                                              .then(data=> {
+                                                             console.log('Erfolgreicher Delete in den PatientenDaten ')})
+                                              .catch(err=>console.log('delete failed: '+err));
+                                    }
+
+                                 success = false;
+                              }
+                              if(i == s1.length -1)
+                                 transfer = 'Erfolgreiche Bearbeitung der Patienten- PersonalDaten -->';
+                          }
 
                } else if(arrv[0].endsWith('kldataSave')) {
 
